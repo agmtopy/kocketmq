@@ -1,6 +1,6 @@
 package com.agmtopy.kocketmq.remoting
 
-interface RPCHook {
+interface RPCHook : (Any) -> Boolean {
     /**
      * RPC前置动作
      */

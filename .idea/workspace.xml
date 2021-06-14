@@ -4,9 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="caaf6081-157e-44a8-8f50-5998cb383f62" name="Default Changelist" comment="初始化Namesrv部分代码">
-      <change afterPath="$PROJECT_DIR$/readme.md" afterDir="false" />
+    <list default="true" id="caaf6081-157e-44a8-8f50-5998cb383f62" name="Default Changelist" comment="增加readme文件">
+      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/common/RemotingUtil.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/common/TlsMode.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/constant/NettySystemConfig.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyDecoder.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyEncoder.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/TlsHelper.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/TlsSystemConfig.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/readme.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/RPCHook.kt" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/RPCHook.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyRemotingAbstract.kt" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyRemotingAbstract.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyRemotingServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyRemotingServer.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyServerConfig.kt" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyServerConfig.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,6 +59,7 @@
         <option value="Kotlin Interface" />
         <option value="Class" />
         <option value="Kotlin Annotation" />
+        <option value="Kotlin Data Class" />
         <option value="Kotlin Enum" />
         <option value="Kotlin Class" />
       </list>
@@ -67,8 +79,8 @@
     </file-type-list>
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/build.gradle" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/Configuration.kt" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/build.gradle" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="ProjectId" id="1tUeY31avF4C2v2iUZeBkRVtwOZ" />
   <component name="ProjectViewState">
@@ -102,13 +114,15 @@
     </option>
   </component>
   <component name="RunManager" selected="Gradle.kocketmq [clean]">
-    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
+    <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
       <option name="arquillianRunConfiguration">
         <value>
           <option name="containerStateName" value="" />
         </value>
       </option>
-      <option name="TEST_OBJECT" value="class" />
+      <option name="TEST_OBJECT" value="CLASS" />
+      <properties />
+      <listeners />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -180,7 +194,8 @@
       <workItem from="1622977221602" duration="692000" />
       <workItem from="1622977930944" duration="4126000" />
       <workItem from="1623501236058" duration="14997000" />
-      <workItem from="1623638047050" duration="15085000" />
+      <workItem from="1623638047050" duration="15817000" />
+      <workItem from="1623688385467" duration="2684000" />
     </task>
     <task id="LOCAL-00001" summary="初始化项目">
       <created>1622829642348</created>
@@ -217,7 +232,14 @@
       <option name="project" value="LOCAL" />
       <updated>1623686781291</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="增加readme文件">
+      <created>1623687658393</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1623687658393</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -269,7 +291,8 @@
     <MESSAGE value="初始化项目" />
     <MESSAGE value="暂存" />
     <MESSAGE value="初始化Namesrv部分代码" />
-    <option name="LAST_COMMIT_MESSAGE" value="初始化Namesrv部分代码" />
+    <MESSAGE value="增加readme文件" />
+    <option name="LAST_COMMIT_MESSAGE" value="增加readme文件" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

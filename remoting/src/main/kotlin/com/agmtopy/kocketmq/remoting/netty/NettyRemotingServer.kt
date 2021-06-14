@@ -3,7 +3,10 @@ package com.agmtopy.kocketmq.remoting.netty
 import com.agmtopy.kocketmq.logging.InternalLogger
 import com.agmtopy.kocketmq.logging.inner.InternalLoggerFactory
 import com.agmtopy.kocketmq.remoting.ChannelEventListener
+import com.agmtopy.kocketmq.remoting.RPCHook
 import com.agmtopy.kocketmq.remoting.common.RemotingHelper
+import com.agmtopy.kocketmq.remoting.common.RemotingUtil
+import com.agmtopy.kocketmq.remoting.common.TlsMode
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.PooledByteBufAllocator
@@ -30,13 +33,12 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class NettyRemotingServer : NettyRemotingAbstract {
     private val log: InternalLogger = InternalLoggerFactory.getLogger(RemotingHelper.ROCKETMQ_REMOTING)
-    private var serverBootstrap: ServerBootstrap? = null
-    private var eventLoopGroupSelector: EventLoopGroup? = null
-    private var eventLoopGroupBoss: EventLoopGroup? = null
-    private val nettyServerConfig: NettyServerConfig? = null
+    private var serverBootstrap: ServerBootstrap
+    private var eventLoopGroupSelector: EventLoopGroup
+    private var eventLoopGroupBoss: EventLoopGroup
+    private var nettyServerConfig: NettyServerConfig
 
-    private var publicExecutor: ExecutorService? = null
-    override var channelEventListener: ChannelEventListener? = null
+    private var publicExecutor: ExecutorService
 
     private val timer: Timer? = Timer("ServerHouseKeepingService", true)
     private var defaultEventExecutorGroup: DefaultEventExecutorGroup? = null
@@ -54,15 +56,19 @@ class NettyRemotingServer : NettyRemotingAbstract {
     private var connectionManageHandler: NettyConnectManageHandler? = null
     private var serverHandler: NettyServerHandler? = null
 
-    fun NettyRemotingServer(nettyServerConfig: NettyServerConfig?) {
-        this(nettyServerConfig, null)
+    /**
+     * 辅助构造函数
+     */
+    constructor(nettyServerConfig: NettyServerConfig) : this(nettyServerConfig, null) {
     }
 
-    fun NettyRemotingServer(
-        nettyServerConfig: NettyServerConfig,
-        channelEventListener: ChannelEventListener?
+    /**
+     * 辅助构造函数
+     */
+    constructor (nettyServerConfig: NettyServerConfig, channelEventListener: ChannelEventListener?) : super(
+        nettyServerConfig.serverOnewaySemaphoreValue,
+        nettyServerConfig.serverAsyncSemaphoreValue
     ) {
-        super(nettyServerConfig.getServerOnewaySemaphoreValue(), nettyServerConfig.getServerAsyncSemaphoreValue())
         serverBootstrap = ServerBootstrap()
         this.nettyServerConfig = nettyServerConfig
         this.channelEventListener = channelEventListener
@@ -118,7 +124,7 @@ class NettyRemotingServer : NettyRemotingAbstract {
 
     fun loadSslContext() {
         val tlsMode: TlsMode = TlsSystemConfig.tlsMode
-        log.info("Server is running in TLS {} mode", tlsMode.getName())
+        log.info("Server is running in TLS $tlsMode.name mode", )
         if (tlsMode !== TlsMode.DISABLED) {
             try {
                 sslContext = TlsHelper.buildSslContext(false)
@@ -132,14 +138,14 @@ class NettyRemotingServer : NettyRemotingAbstract {
     }
 
     private fun useEpoll(): Boolean {
-        return (RemotingUtil.isLinuxPlatform()
-                && nettyServerConfig.isUseEpollNativeSelector()
+        return (RemotingUtil.isLinuxPlatform
+                && nettyServerConfig!!.isUseEpollNativeSelector()
                 && Epoll.isAvailable())
     }
 
     fun start() {
         defaultEventExecutorGroup = DefaultEventExecutorGroup(
-            nettyServerConfig.getServerWorkerThreads(),
+            nettyServerConfig!!.getServerWorkerThreads(),
             object : ThreadFactory {
                 private val threadIndex = AtomicInteger(0)
                 override fun newThread(r: Runnable): Thread {
@@ -222,7 +228,7 @@ class NettyRemotingServer : NettyRemotingAbstract {
 
     fun registerRPCHook(rpcHook: RPCHook?) {
         if (rpcHook != null && !rpcHooks.contains(rpcHook)) {
-            rpcHooks.add(rpcHook)
+            rpcHooks.all(rpcHook)
         }
     }
 
@@ -231,12 +237,12 @@ class NettyRemotingServer : NettyRemotingAbstract {
         if (null == executor) {
             executorThis = publicExecutor
         }
-        val pair = Pair(processor, executorThis)
+        val pair = com.agmtopy.kocketmq.remoting.common.Pair(processor, executorThis!!)
         processorTable[requestCode] = pair
     }
 
     fun registerDefaultProcessor(processor: NettyRequestProcessor, executor: ExecutorService) {
-        defaultRequestProcessor = Pair(processor, executor)
+        defaultRequestProcessor = com.agmtopy.kocketmq.remoting.common.Pair(processor, executor)
     }
 
     fun localListenPort(): Int {
@@ -435,4 +441,10 @@ class NettyRemotingServer : NettyRemotingAbstract {
             RemotingUtil.closeChannel(ctx.channel())
         }
     }
+
+    override var channelEventListener: ChannelEventListener?
+        get() = TODO("Not yet implemented")
+        set(value) {}
+    override val callbackExecutor: ExecutorService?
+        get() = TODO("Not yet implemented")
 }
