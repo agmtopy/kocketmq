@@ -4,67 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="caaf6081-157e-44a8-8f50-5998cb383f62" name="Default Changelist" comment="暂存">
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/DataVersion.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/concurrent/CountDownLatch2.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/concurrent/ServiceThread.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/kvconfig/KVConfigSerializeWrapper.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/ChannelEventListener.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/CommandCustomHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/InvokeCallback.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/RPCHook.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/RemotingServer.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/RemotingService.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/annotation/CFNotNull.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/common/Pair.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/common/SemaphoreReleaseOnlyOnce.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/exception/RemotingException.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/exception/impl/RemotingCommandException.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/exception/impl/RemotingSendRequestException.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/exception/impl/RemotingTimeoutException.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/exception/impl/RemotingTooMuchRequestException.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/AsyncNettyRequestProcessor.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyEvent.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyEventType.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyLogger.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyRemotingAbstract.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyRemotingServer.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyRequestProcessor.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/RemotingResponseCallback.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/RequestTask.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/ResponseFuture.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/LanguageCode.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/RemotingCommandType.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/RemotingSerializable.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/RemotingSysResponseCode.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/RocketMQSerializable.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.10.3/fileChanges/last-build.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.10.3/fileContent/fileContent.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.10.3/fileHashes/fileHashes.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.10.3/fileHashes/fileHashes.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.10.3/fileHashes/resourceHashesCache.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.10.3/gc.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.10.3/javaCompile/classAnalysis.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.10.3/javaCompile/jarAnalysis.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.10.3/javaCompile/javaCompile.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.10.3/javaCompile/taskHistory.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.10.3/taskHistory/taskHistory.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.10.3/taskHistory/taskHistory.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/checksums/checksums.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/checksums/checksums.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/checksums/md5-checksums.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/checksums/md5-checksums.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/checksums/sha1-checksums.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/checksums/sha1-checksums.bin" afterDir="false" />
+    <list default="true" id="caaf6081-157e-44a8-8f50-5998cb383f62" name="Default Changelist" comment="初始化Namesrv部分代码">
+      <change afterPath="$PROJECT_DIR$/readme.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/common/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/Configuration.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/Configuration.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/MixAll.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/MixAll.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/namesrv/NamesrvConfig.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/namesrv/NamesrvConfig.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logging/src/main/kotlin/com/agmtopy/kocketmq/logging/InternalLogger.kt" beforeDir="false" afterPath="$PROJECT_DIR$/logging/src/main/kotlin/com/agmtopy/kocketmq/logging/InternalLogger.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logging/src/main/kotlin/com/agmtopy/kocketmq/logging/inner/InternalLoggerFactory.kt" beforeDir="false" afterPath="$PROJECT_DIR$/logging/src/main/kotlin/com/agmtopy/kocketmq/logging/inner/InternalLoggerFactory.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/NamesrvController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/NamesrvController.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/kvconfig/KVConfigManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/kvconfig/KVConfigManager.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/remoting/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/RemotingCommand.kt" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/RemotingCommand.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/common/RemotingHelper.kt" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/common/RemotingHelper.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -113,6 +55,7 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="MIXED" />
     <option name="SIGN_OFF_COMMIT" value="true" />
   </component>
   <component name="GitSEFilterConfiguration">
@@ -237,7 +180,7 @@
       <workItem from="1622977221602" duration="692000" />
       <workItem from="1622977930944" duration="4126000" />
       <workItem from="1623501236058" duration="14997000" />
-      <workItem from="1623638047050" duration="14132000" />
+      <workItem from="1623638047050" duration="15085000" />
     </task>
     <task id="LOCAL-00001" summary="初始化项目">
       <created>1622829642348</created>
@@ -267,7 +210,14 @@
       <option name="project" value="LOCAL" />
       <updated>1622980869211</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="初始化Namesrv部分代码">
+      <created>1623686781291</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1623686781291</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -276,6 +226,31 @@
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
+        <entry key="92d168aa-6174-435e-a551-d80c2ae178ac">
+          <value>
+            <State>
+              <option name="SHOW_ONLY_AFFECTED_CHANGES" value="true" />
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="HEAD" />
+                      </list>
+                    </value>
+                  </entry>
+                  <entry key="roots">
+                    <value>
+                      <list>
+                        <option value="$PROJECT_DIR$" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
         <entry key="MAIN">
           <value>
             <State />
@@ -283,12 +258,18 @@
         </entry>
       </map>
     </option>
+    <option name="OPEN_GENERIC_TABS">
+      <map>
+        <entry key="92d168aa-6174-435e-a551-d80c2ae178ac" value="TOOL_WINDOW" />
+      </map>
+    </option>
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="初始化项目" />
     <MESSAGE value="暂存" />
-    <option name="LAST_COMMIT_MESSAGE" value="暂存" />
+    <MESSAGE value="初始化Namesrv部分代码" />
+    <option name="LAST_COMMIT_MESSAGE" value="初始化Namesrv部分代码" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
