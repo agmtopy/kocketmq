@@ -8,22 +8,12 @@ version '0.0.1-SNAPSHOT'
 
 sourceCompatibility = 11
 
-repositories {
-    maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
-    mavenCentral()
-}
-
 dependencies {
+    implementation project(":logging")
+    implementation project(":remoting")
+
     //第三方jar
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0-RC"
     implementation "io.netty:netty-all:4.0.42.Final"
-
-    testCompile "junit:junit:4.12"
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = "11"
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "11"
 }

@@ -8,22 +8,12 @@ version '0.0.1-SNAPSHOT'
 
 sourceCompatibility = 11
 
-repositories {
-    maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
-    mavenCentral()
-}
-
 dependencies {
-    compile project(":logging")
+    implementation project(":logging")
+    implementation project(":common")
 
     //第三方jar
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    testCompile "junit:junit:4.12"
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = "11"
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "11"
+    implementation "com.alibaba:fastjson:1.2.69"
+    implementation "io.netty:netty-all:4.0.42.Final"
 }
