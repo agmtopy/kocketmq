@@ -1,5 +1,6 @@
 package com.agmtopy.kocketmq.remoting
 
+import com.agmtopy.kocketmq.remoting.common.Pair
 import com.agmtopy.kocketmq.remoting.exception.impl.RemotingSendRequestException
 import com.agmtopy.kocketmq.remoting.exception.impl.RemotingTimeoutException
 import com.agmtopy.kocketmq.remoting.exception.impl.RemotingTooMuchRequestException
@@ -10,6 +11,7 @@ import java.util.concurrent.ExecutorService
  * 执行远程服务的具体实现
  */
 interface RemotingServer : RemotingService {
+
     /**
      * 注册处理器
      */

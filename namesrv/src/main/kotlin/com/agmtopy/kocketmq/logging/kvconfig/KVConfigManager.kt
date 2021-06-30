@@ -2,12 +2,14 @@ package com.agmtopy.kocketmq.logging.kvconfig
 
 import com.agmtopy.kocketmq.common.MixAll
 import com.agmtopy.kocketmq.common.constant.LoggerName
+import com.agmtopy.kocketmq.common.protocol.body.KVTable
 import com.agmtopy.kocketmq.logging.NamesrvController
 import com.agmtopy.kocketmq.logging.inner.InternalLoggerFactory
 import com.agmtopy.kocketmq.remoting.protocol.RemotingSerializable
 import java.io.IOException
 import java.util.*
-import kotlin.collections.HashMap
+import java.util.concurrent.locks.ReadWriteLock
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 /**
  * kv配置管理器
@@ -18,7 +20,8 @@ class KVConfigManager internal constructor(var namesrvController: NamesrvControl
         val log = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME)
     }
 
-    private val configTable = HashMap<String?, Map<String?, String?>?>()
+    private val lock: ReadWriteLock = ReentrantReadWriteLock()
+    private val configTable = HashMap<String?, HashMap<String?, String?>?>()
 
     //加载KVConfigManager
     fun load() {
@@ -42,5 +45,144 @@ class KVConfigManager internal constructor(var namesrvController: NamesrvControl
             log.warn("Load KV config table exception", e)
         }
     }
+
+    fun putKVConfig(namespace: String?, key: String?, value: String?) {
+        try {
+            this.lock.writeLock().lockInterruptibly()
+            try {
+                var kvTable: HashMap<String?, String?>? = configTable[namespace]
+                if (null == kvTable) {
+                    kvTable = HashMap()
+                    configTable[namespace] = kvTable
+                    log.info("putKVConfig create new Namespace {}", namespace)
+                }
+                val prev = kvTable.put(key, value)
+                if (null != prev) {
+                    log.info(
+                        "putKVConfig update config item, Namespace: $namespace Key: $key Value: $value"
+                    )
+                } else {
+                    log.info(
+                        "putKVConfig create new config item, Namespace: $namespace Key: $key Value: $value"
+                    )
+                }
+            } finally {
+                this.lock.writeLock().unlock()
+            }
+        } catch (e: InterruptedException) {
+            log.error("putKVConfig InterruptedException", e)
+        }
+        persist()
+    }
+
+    fun persist() {
+        try {
+            this.lock.readLock().lockInterruptibly()
+            try {
+                val kvConfigSerializeWrapper = KVConfigSerializeWrapper()
+                kvConfigSerializeWrapper.setConfigTable(configTable)
+                val content = kvConfigSerializeWrapper.toJson()
+                if (null != content) {
+                    MixAll.string2File(content, namesrvController.namesrvConfig.getKvConfigPath()!!)
+                }
+            } catch (e: IOException) {
+                log.error(
+                    "persist kvconfig Exception, "
+                            + namesrvController.namesrvConfig.getKvConfigPath(), e
+                )
+            } finally {
+                this.lock.readLock().unlock()
+            }
+        } catch (e: InterruptedException) {
+            log.error("persist InterruptedException", e)
+        }
+    }
+
+    fun deleteKVConfig(namespace: String?, key: String?) {
+        try {
+            this.lock.writeLock().lockInterruptibly()
+            try {
+                val kvTable: HashMap<String?, String?>? = configTable[namespace]
+                if (null != kvTable) {
+                    val value = kvTable.remove(key)
+                    log.info(
+                        "deleteKVConfig delete a config item, Namespace: $namespace Key: $key Value: $value"
+                    )
+                }
+            } finally {
+                this.lock.writeLock().unlock()
+            }
+        } catch (e: InterruptedException) {
+            log.error("deleteKVConfig InterruptedException", e)
+        }
+        persist()
+    }
+
+    fun getKVListByNamespace(namespace: String?): ByteArray? {
+        try {
+            this.lock.readLock().lockInterruptibly()
+            try {
+                val kvTable: HashMap<String?, String?>? = configTable[namespace]
+                if (null != kvTable) {
+                    val table = KVTable()
+                    table.table = kvTable
+                    return table.encode()
+                }
+            } finally {
+                this.lock.readLock().unlock()
+            }
+        } catch (e: InterruptedException) {
+            log.error("getKVListByNamespace InterruptedException", e)
+        }
+        return null
+    }
+
+    fun getKVConfig(namespace: String?, key: String?): String? {
+        try {
+            this.lock.readLock().lockInterruptibly()
+            try {
+                val kvTable: HashMap<String?, String?>? = configTable[namespace]
+                if (null != kvTable) {
+                    return kvTable[key]
+                }
+            } finally {
+                this.lock.readLock().unlock()
+            }
+        } catch (e: InterruptedException) {
+            log.error("getKVConfig InterruptedException", e)
+        }
+        return null
+    }
+
+    fun printAllPeriodically() {
+        try {
+            this.lock.readLock().lockInterruptibly()
+            try {
+                log.info("--------------------------------------------------------")
+                run {
+                    log.info("configTable SIZE: {}", this.configTable.size)
+                    val it: MutableIterator<MutableMap.MutableEntry<String?, HashMap<String?, String?>?>> =
+                        this.configTable.entries.iterator()
+                    while (it.hasNext()) {
+                        val (key, value) = it.next()
+                        val itSub: Iterator<Map.Entry<String?, String?>> =
+                            value!!.entries.iterator()
+                        while (itSub.hasNext()) {
+                            val (key1, value1) = itSub.next()
+                            log.info("configTable NS: $key Key: $key1 Value: $value1")
+                        }
+                    }
+                }
+            } finally {
+                this.lock.readLock().unlock()
+            }
+        } catch (e: InterruptedException) {
+            log.error("printAllPeriodically InterruptedException", e)
+        }
+    }
+
+}
+
+private fun <K, V> HashMap<K, V>.putAll(from: Map<String?, Map<String?, String?>?>) {
 
 }

@@ -1,8 +1,10 @@
 package com.agmtopy.kocketmq.logging
 
 import com.agmtopy.kocketmq.common.constant.LoggerName
+import com.agmtopy.kocketmq.common.namesrv.NamesrvConfig
 import com.agmtopy.kocketmq.logging.inner.InternalLoggerFactory
 import com.agmtopy.kocketmq.remoting.RemotingCommand
+import com.agmtopy.kocketmq.remoting.netty.NettyServerConfig
 import java.lang.IllegalArgumentException
 
 /**
@@ -26,11 +28,8 @@ class NamesrvStartup {
             start(controller)
             val tip =
                 "The Name Server boot success. serializeType=" + RemotingCommand.getSerializeTypeConfigInThisServer()
-
-            log.info(tip);
+            log!!.info(tip);
             println(tip)
-
-
         } catch (e: Throwable) {
 
         }
@@ -53,7 +52,7 @@ class NamesrvStartup {
          * 创建Namersrv对象
          */
         fun createNamesrvController(args: Array<String>): NamesrvController {
-            return NamesrvController()
+            return NamesrvController(NamesrvConfig(), NettyServerConfig())
         }
 
         /**
@@ -66,9 +65,9 @@ class NamesrvStartup {
 
             //NamesrvController执行初始化,如果失败时退出进程
             if(controller.initialize()){
-
+                controller.shutdown()
             }
-
+            controller.start()
         }
 
         /**
@@ -78,5 +77,4 @@ class NamesrvStartup {
             return InternalLoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
         }
     }
-
 }

@@ -44,7 +44,7 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
     /**
      * 这个容器保存每个请求的所有处理器, 我们通过在这个Map中查找响应处理器来处理请求
      */
-    val processorTable = HashMap<Int, Pair<NettyRequestProcessor, ExecutorService>>(64)
+    val processorTable = HashMap<Int, Pair<NettyRequestProcessor?, ExecutorService?>>(64)
 
     /**
      * Netty处理器,定义类型为[ChannelEventListener].

@@ -2,11 +2,14 @@ package com.agmtopy.kocketmq.remoting.netty
 
 import com.agmtopy.kocketmq.logging.InternalLogger
 import com.agmtopy.kocketmq.logging.inner.InternalLoggerFactory
-import com.agmtopy.kocketmq.remoting.ChannelEventListener
-import com.agmtopy.kocketmq.remoting.RPCHook
+import com.agmtopy.kocketmq.remoting.*
+import com.agmtopy.kocketmq.remoting.common.Pair
 import com.agmtopy.kocketmq.remoting.common.RemotingHelper
 import com.agmtopy.kocketmq.remoting.common.RemotingUtil
 import com.agmtopy.kocketmq.remoting.common.TlsMode
+import com.agmtopy.kocketmq.remoting.exception.impl.RemotingSendRequestException
+import com.agmtopy.kocketmq.remoting.exception.impl.RemotingTimeoutException
+import com.agmtopy.kocketmq.remoting.exception.impl.RemotingTooMuchRequestException
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.PooledByteBufAllocator
@@ -31,7 +34,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicInteger
 
-class NettyRemotingServer : NettyRemotingAbstract {
+class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
     private val log: InternalLogger = InternalLoggerFactory.getLogger(RemotingHelper.ROCKETMQ_REMOTING)
     private var serverBootstrap: ServerBootstrap
     private var eventLoopGroupSelector: EventLoopGroup
@@ -232,24 +235,24 @@ class NettyRemotingServer : NettyRemotingAbstract {
         }
     }
 
-    fun registerProcessor(requestCode: Int, processor: NettyRequestProcessor, executor: ExecutorService?) {
+    override fun registerProcessor(requestCode: Int, processor: NettyRequestProcessor?, executor: ExecutorService?) {
         var executorThis = executor
         if (null == executor) {
             executorThis = publicExecutor
         }
-        val pair = com.agmtopy.kocketmq.remoting.common.Pair(processor, executorThis!!)
+        val pair = com.agmtopy.kocketmq.remoting.common.Pair(processor!!, executorThis!!)
         processorTable[requestCode] = pair
     }
 
-    fun registerDefaultProcessor(processor: NettyRequestProcessor, executor: ExecutorService) {
-        defaultRequestProcessor = com.agmtopy.kocketmq.remoting.common.Pair(processor, executor)
+    override fun registerDefaultProcessor(processor: NettyRequestProcessor?, executor: ExecutorService?) {
+        defaultRequestProcessor = com.agmtopy.kocketmq.remoting.common.Pair(processor!!, executor!!)
     }
 
-    fun localListenPort(): Int {
+    override fun localListenPort(): Int {
         return port
     }
 
-    fun getProcessorPair(requestCode: Int): Pair<NettyRequestProcessor?, ExecutorService?>? {
+    override fun getProcessorPair(requestCode: Int): Pair<NettyRequestProcessor?, ExecutorService?>? {
         return processorTable[requestCode]
     }
 
@@ -264,13 +267,13 @@ class NettyRemotingServer : NettyRemotingAbstract {
         RemotingTimeoutException::class,
         RemotingSendRequestException::class
     )
-    fun invokeAsync(
+    override fun invokeAsync(
         channel: Channel?,
         request: RemotingCommand?,
         timeoutMillis: Long,
         invokeCallback: InvokeCallback?
     ) {
-        invokeAsyncImpl(channel!!, request, timeoutMillis, invokeCallback)
+        invokeAsyncImpl(channel!!, request!!, timeoutMillis, invokeCallback)
     }
 
     @Throws(
@@ -279,15 +282,16 @@ class NettyRemotingServer : NettyRemotingAbstract {
         RemotingTimeoutException::class,
         RemotingSendRequestException::class
     )
-    fun invokeOneway(channel: Channel?, request: RemotingCommand?, timeoutMillis: Long) {
-        invokeOnewayImpl(channel!!, request, timeoutMillis)
+    override fun invokeOneway(channel: Channel?, request: RemotingCommand?, timeoutMillis: Long) {
+        invokeOnewayImpl(channel!!, request!!, timeoutMillis)
     }
 
+    @JvmName("getChannelEventListenerByJava")
     fun getChannelEventListener(): ChannelEventListener? {
         return channelEventListener
     }
 
-
+    @JvmName("getCallbackExecutorByJava")
     fun getCallbackExecutor(): ExecutorService? {
         return publicExecutor
     }
@@ -312,11 +316,11 @@ class NettyRemotingServer : NettyRemotingAbstract {
             val b = msg.getByte(0)
             if (b == HANDSHAKE_MAGIC_CODE) {
                 when (tlsMode) {
-                    DISABLED -> {
+                    TlsMode.DISABLED -> {
                         ctx.close()
                         log.warn("Clients intend to establish an SSL connection while this server is running in SSL disabled mode")
                     }
-                    PERMISSIVE, ENFORCING -> if (null != sslContext) {
+                    TlsMode.PERMISSIVE, TlsMode.ENFORCING -> if (null != sslContext) {
                         ctx.pipeline()
                             .addAfter(
                                 defaultEventExecutorGroup,

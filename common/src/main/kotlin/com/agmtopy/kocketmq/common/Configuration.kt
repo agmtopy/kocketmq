@@ -2,10 +2,10 @@ package com.agmtopy.kocketmq.common
 
 import com.agmtopy.kocketmq.common.namesrv.NamesrvConfig
 import com.agmtopy.kocketmq.logging.InternalLogger
-import java.lang.RuntimeException
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
-import java.util.ArrayList
+import java.util.*
+import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 /**
@@ -25,6 +25,10 @@ class Configuration {
     private var storePathObject: Any? = null
     private lateinit var storePathField: Field
     private var dataVersion: DataVersion? = DataVersion()
+    private val readWriteLock: ReadWriteLock = ReentrantReadWriteLock()
+
+    private val allConfigs = Properties()
+
 
     //初始化读写锁
     private val lock = ReentrantReadWriteLock()
@@ -35,7 +39,6 @@ class Configuration {
 
         for (obj in configObjects) {
             //处理配置参数集合
-
         }
     }
 
@@ -75,6 +78,62 @@ class Configuration {
             }
         } catch (e: InterruptedException) {
             log.error("setStorePathFromConfig lock error")
+        }
+    }
+
+    fun getAllConfigsFormatString(): String? {
+        try {
+            readWriteLock.readLock().lockInterruptibly()
+            return try {
+                getAllConfigsInternal()
+            } finally {
+                readWriteLock.readLock().unlock()
+            }
+        } catch (e: InterruptedException) {
+            log.error("getAllConfigsFormatString lock error")
+        }
+        return null
+    }
+
+    private fun getAllConfigsInternal(): String? {
+        val stringBuilder = StringBuilder()
+
+        // reload from config object ?
+        for (configObject in configObjectList) {
+            val properties: Properties = MixAll.object2Properties(configObject)!!
+            if (properties != null) {
+                merge(properties, this.allConfigs)
+            } else {
+                log.warn("getAllConfigsInternal object2Properties is null, {}", configObject.javaClass)
+            }
+        }
+        run { stringBuilder.append(MixAll.properties2String(this.allConfigs)) }
+        return stringBuilder.toString()
+    }
+
+
+    private fun merge(from: Properties, to: Properties) {
+        for (key in from.keys) {
+            val fromObj = from[key]
+            val toObj = to[key]
+            if (toObj != null && toObj != fromObj) {
+                log.info("Replace, key: $key, value: $toObj -> $fromObj")
+            }
+            to[key] = fromObj
+        }
+    }
+
+    private fun mergeIfExist(from: Properties, to: Properties) {
+        for (key in from.keys) {
+            if (!to.containsKey(key)) {
+                continue
+            }
+            val fromObj = from[key]
+            val toObj = to[key]
+            if (toObj != null && toObj != fromObj) {
+                log.info("Replace, key: $key, value: $toObj -> $fromObj")
+            }
+            to[key] = fromObj
         }
     }
 }
