@@ -40,11 +40,12 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
     private var eventLoopGroupSelector: EventLoopGroup
     private var eventLoopGroupBoss: EventLoopGroup
     private var nettyServerConfig: NettyServerConfig
+    private var channelEventListener: ChannelEventListener? = null
 
     private var publicExecutor: ExecutorService
 
     private val timer: Timer? = Timer("ServerHouseKeepingService", true)
-    private var defaultEventExecutorGroup: DefaultEventExecutorGroup? = null
+    protected var defaultEventExecutorGroup: DefaultEventExecutorGroup? = null
 
 
     private var port = 0
@@ -127,7 +128,7 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
 
     fun loadSslContext() {
         val tlsMode: TlsMode = TlsSystemConfig.tlsMode
-        log.info("Server is running in TLS $tlsMode.name mode", )
+        log.info("Server is running in TLS $tlsMode.name mode")
         if (tlsMode !== TlsMode.DISABLED) {
             try {
                 sslContext = TlsHelper.buildSslContext(false)
@@ -146,7 +147,7 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
                 && Epoll.isAvailable())
     }
 
-    fun start() {
+    override fun start() {
         defaultEventExecutorGroup = DefaultEventExecutorGroup(
             nettyServerConfig!!.getServerWorkerThreads(),
             object : ThreadFactory {
@@ -204,7 +205,7 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
         }, (1000 * 3).toLong(), 1000)
     }
 
-    fun shutdown() {
+    override fun shutdown() {
         try {
             if (timer != null) {
                 timer.cancel()
@@ -229,7 +230,7 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
         }
     }
 
-    fun registerRPCHook(rpcHook: RPCHook?) {
+    override fun registerRPCHook(rpcHook: RPCHook?) {
         if (rpcHook != null && !rpcHooks.contains(rpcHook)) {
             rpcHooks.all(rpcHook)
         }
@@ -240,25 +241,25 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
         if (null == executor) {
             executorThis = publicExecutor
         }
-        val pair = com.agmtopy.kocketmq.remoting.common.Pair(processor!!, executorThis!!)
+        val pair = Pair(processor!!, executorThis!!)
         processorTable[requestCode] = pair
     }
 
     override fun registerDefaultProcessor(processor: NettyRequestProcessor?, executor: ExecutorService?) {
-        defaultRequestProcessor = com.agmtopy.kocketmq.remoting.common.Pair(processor!!, executor!!)
+        defaultRequestProcessor = Pair(processor!!, executor!!)
     }
 
     override fun localListenPort(): Int {
         return port
     }
 
-    override fun getProcessorPair(requestCode: Int): Pair<NettyRequestProcessor?, ExecutorService?>? {
+    override fun getProcessorPair(requestCode: Int): Pair<NettyRequestProcessor, ExecutorService>? {
         return processorTable[requestCode]
     }
 
     @Throws(InterruptedException::class, RemotingSendRequestException::class, RemotingTimeoutException::class)
-    fun invokeSync(channel: Channel?, request: RemotingCommand?, timeoutMillis: Long): RemotingCommand? {
-        return invokeSyncImpl(channel!!, request, timeoutMillis)
+    override fun invokeSync(channel: Channel?, request: RemotingCommand?, timeoutMillis: Long): RemotingCommand? {
+        return invokeSyncImpl(channel!!, request!!, timeoutMillis)
     }
 
     @Throws(
@@ -286,13 +287,11 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
         invokeOnewayImpl(channel!!, request!!, timeoutMillis)
     }
 
-    @JvmName("getChannelEventListenerByJava")
-    fun getChannelEventListener(): ChannelEventListener? {
+    override fun getChannelEventListener(): ChannelEventListener? {
         return channelEventListener
     }
 
-    @JvmName("getCallbackExecutorByJava")
-    fun getCallbackExecutor(): ExecutorService? {
+    override fun getCallbackExecutor(): ExecutorService {
         return publicExecutor
     }
 
@@ -304,7 +303,7 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
     }
 
     @Sharable
-    internal class HandshakeHandler(tlsMode: TlsMode) : SimpleChannelInboundHandler<ByteBuf>() {
+    internal inner class HandshakeHandler(tlsMode: TlsMode) : SimpleChannelInboundHandler<ByteBuf>() {
         private val tlsMode: TlsMode
 
         @Throws(Exception::class)
@@ -326,7 +325,7 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
                                 defaultEventExecutorGroup,
                                 HANDSHAKE_HANDLER_NAME,
                                 TLS_HANDLER_NAME,
-                                sslContext.newHandler(ctx.channel().alloc())
+                                sslContext!!.newHandler(ctx.channel().alloc())
                             )
                             .addAfter(
                                 defaultEventExecutorGroup,
@@ -359,9 +358,7 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
             ctx.fireChannelRead(msg.retain())
         }
 
-        companion object {
-            private const val HANDSHAKE_MAGIC_CODE: Byte = 0x16
-        }
+        private val HANDSHAKE_MAGIC_CODE: Byte = 0x16
 
         init {
             this.tlsMode = tlsMode
@@ -369,7 +366,7 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
     }
 
     @Sharable
-    internal class NettyServerHandler : SimpleChannelInboundHandler<RemotingCommand?>() {
+    internal inner class NettyServerHandler : SimpleChannelInboundHandler<RemotingCommand?>() {
         @Throws(Exception::class)
         override fun channelRead0(ctx: ChannelHandlerContext, msg: RemotingCommand?) {
             processMessageReceived(ctx, msg)
@@ -377,24 +374,24 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
     }
 
     @Sharable
-    internal class NettyConnectManageHandler : ChannelDuplexHandler() {
+    internal inner class NettyConnectManageHandler : ChannelDuplexHandler() {
         @Throws(Exception::class)
         override fun channelRegistered(ctx: ChannelHandlerContext) {
-            val remoteAddress: String = RemotingHelper.parseChannelRemoteAddr(ctx.channel())
+            val remoteAddress: String = RemotingHelper.parseChannelRemoteAddr(ctx.channel())!!
             log.info("NETTY SERVER PIPELINE: channelRegistered {}", remoteAddress)
             super.channelRegistered(ctx)
         }
 
         @Throws(Exception::class)
         override fun channelUnregistered(ctx: ChannelHandlerContext) {
-            val remoteAddress: String = RemotingHelper.parseChannelRemoteAddr(ctx.channel())
+            val remoteAddress: String = RemotingHelper.parseChannelRemoteAddr(ctx.channel())!!
             log.info("NETTY SERVER PIPELINE: channelUnregistered, the channel[{}]", remoteAddress)
             super.channelUnregistered(ctx)
         }
 
         @Throws(Exception::class)
         override fun channelActive(ctx: ChannelHandlerContext) {
-            val remoteAddress: String = RemotingHelper.parseChannelRemoteAddr(ctx.channel())
+            val remoteAddress: String = RemotingHelper.parseChannelRemoteAddr(ctx.channel())!!
             log.info("NETTY SERVER PIPELINE: channelActive, the channel[{}]", remoteAddress)
             super.channelActive(ctx)
             if (this@NettyRemotingServer.channelEventListener != null) {
@@ -404,7 +401,7 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
 
         @Throws(Exception::class)
         override fun channelInactive(ctx: ChannelHandlerContext) {
-            val remoteAddress: String = RemotingHelper.parseChannelRemoteAddr(ctx.channel())
+            val remoteAddress: String = RemotingHelper.parseChannelRemoteAddr(ctx.channel())!!
             log.info("NETTY SERVER PIPELINE: channelInactive, the channel[{}]", remoteAddress)
             super.channelInactive(ctx)
             if (this@NettyRemotingServer.channelEventListener != null) {
@@ -416,7 +413,7 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
         override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any) {
             if (evt is IdleStateEvent) {
                 if (evt.state() == IdleState.ALL_IDLE) {
-                    val remoteAddress: String = RemotingHelper.parseChannelRemoteAddr(ctx.channel())
+                    val remoteAddress: String = RemotingHelper.parseChannelRemoteAddr(ctx.channel())!!
                     log.warn("NETTY SERVER PIPELINE: IDLE exception [{}]", remoteAddress)
                     RemotingUtil.closeChannel(ctx.channel())
                     if (this@NettyRemotingServer.channelEventListener != null) {
@@ -430,7 +427,7 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
 
         @Throws(Exception::class)
         override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
-            val remoteAddress: String = RemotingHelper.parseChannelRemoteAddr(ctx.channel())
+            val remoteAddress: String = RemotingHelper.parseChannelRemoteAddr(ctx.channel())!!
             log.warn("NETTY SERVER PIPELINE: exceptionCaught {}", remoteAddress)
             log.warn("NETTY SERVER PIPELINE: exceptionCaught exception.", cause)
             if (this@NettyRemotingServer.channelEventListener != null) {
@@ -445,10 +442,4 @@ class NettyRemotingServer : NettyRemotingAbstract, RemotingServer {
             RemotingUtil.closeChannel(ctx.channel())
         }
     }
-
-    override var channelEventListener: ChannelEventListener?
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override val callbackExecutor: ExecutorService?
-        get() = TODO("Not yet implemented")
 }

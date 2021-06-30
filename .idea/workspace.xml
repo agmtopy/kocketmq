@@ -4,74 +4,46 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="caaf6081-157e-44a8-8f50-5998cb383f62" name="Default Changelist" comment="增加readme文件">
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/MQVersion.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/TopicConfig.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/TopicSysFlag.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/concurrent/ThreadFactoryImpl.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/constant/PermName.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/constant/RequestCode.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/enum/TopicFilterType.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/namesrv/DeleteKVConfigRequestHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/namesrv/GetKVConfigRequestHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/namesrv/GetKVConfigResponseHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/namesrv/PutKVConfigRequestHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/namesrv/RegisterBrokerResult.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/body/ClusterInfo.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/body/KVTable.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/body/RegisterBrokerBody.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/body/TopicConfigSerializeWrapper.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/header/GetTopicsByClusterRequestHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/header/namesrv/DeleteTopicInNamesrvRequestHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/header/namesrv/GetKVListByNamespaceRequestHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/header/namesrv/GetRouteInfoRequestHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/header/namesrv/QueryDataVersionRequestHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/header/namesrv/QueryDataVersionResponseHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/header/namesrv/RegisterBrokerRequestHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/header/namesrv/RegisterBrokerResponseHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/header/namesrv/UnRegisterBrokerRequestHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/header/namesrv/WipeWritePermOfBrokerRequestHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/header/namesrv/WipeWritePermOfBrokerResponseHeader.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/route/TopicRouteData.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/util/FAQUrl.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/util/UtilAll.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/logging/src/main/java/com/agmtopy/kocketmq/logging/inner/Demo.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/logging/src/main/java/com/agmtopy/kocketmq/logging/inner/Demo2.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/constant/NamesrvUtil.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/processor/DefaultRequestProcessor.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/annotation/CFNullable.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/ResponseCode.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/body/TopicList.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/structure/BrokerData.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/structure/BrokerLiveInfo.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/structure/QueueData.kt" afterDir="false" />
+    <list default="true" id="caaf6081-157e-44a8-8f50-5998cb383f62" name="Default Changelist" comment="增加LICENSE">
+      <change afterPath="$PROJECT_DIR$/namesrv/src/main/java/com/agmtopy/kocketmq/logging/InternalA.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/namesrv/src/main/java/com/agmtopy/kocketmq/logging/InternalAa.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/processor/ClusterTestRequestProcessor.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/common/ServiceThread.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/FileRegionEncoder.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.0.2/executionHistory/executionHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.0.2/executionHistory/executionHistory.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.0.2/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.0.2/executionHistory/executionHistory.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.0.2/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.0.2/fileHashes/fileHashes.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.0.2/fileHashes/fileHashes.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.0.2/fileHashes/fileHashes.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/7.0.2/fileHashes/resourceHashesCache.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.0.2/fileHashes/resourceHashesCache.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/7.0.2/javaCompile/classAnalysis.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.0.2/javaCompile/classAnalysis.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/7.0.2/javaCompile/jarAnalysis.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.0.2/javaCompile/jarAnalysis.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/7.0.2/javaCompile/javaCompile.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.0.2/javaCompile/javaCompile.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/7.0.2/javaCompile/taskHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.0.2/javaCompile/taskHistory.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/checksums/checksums.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/checksums/checksums.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/checksums/md5-checksums.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/checksums/md5-checksums.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/checksums/sha1-checksums.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/checksums/sha1-checksums.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/common/build.gradle" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/Configuration.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/Configuration.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/DataVersion.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/DataVersion.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/MixAll.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/MixAll.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/namesrv/NamesrvConfig.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/namesrv/NamesrvConfig.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logging/src/main/java/com/agmtopy/kocketmq/logging/inner/Demo.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/logging/src/main/java/com/agmtopy/kocketmq/logging/inner/Demo1.java" beforeDir="false" afterPath="$PROJECT_DIR$/logging/src/main/java/com/agmtopy/kocketmq/logging/inner/Demo1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/body/ClusterInfo.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/body/ClusterInfo.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/route/TopicRouteData.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/route/TopicRouteData.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logging/src/main/kotlin/com/agmtopy/kocketmq/logging/inner/InternalLoggerFactory.kt" beforeDir="false" afterPath="$PROJECT_DIR$/logging/src/main/kotlin/com/agmtopy/kocketmq/logging/inner/InternalLoggerFactory.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/NamesrvController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/NamesrvController.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/NamesrvStartup.kt" beforeDir="false" afterPath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/NamesrvStartup.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/kvconfig/KVConfigManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/kvconfig/KVConfigManager.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/routeinfo/BrokerHousekeepingService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/routeinfo/BrokerHousekeepingService.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/processor/DefaultRequestProcessor.kt" beforeDir="false" afterPath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/processor/DefaultRequestProcessor.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/routeinfo/RouteInfoManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/routeinfo/RouteInfoManager.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/remoting/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/build.gradle" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/RemotingServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/RemotingServer.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyRemotingAbstract.kt" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyRemotingAbstract.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyRemotingServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyRemotingServer.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/RemotingSerializable.kt" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/RemotingSerializable.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/RemotingSysResponseCode.kt" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/RemotingSysResponseCode.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyServerConfig.kt" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/netty/NettyServerConfig.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/RocketMQSerializable.kt" beforeDir="false" afterPath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/RocketMQSerializable.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/structure/BrokerData.kt" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/kotlin/com/agmtopy/kocketmq/common/protocol/route/BrokerData.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/remoting/src/main/kotlin/com/agmtopy/kocketmq/remoting/protocol/structure/BrokerLiveInfo.kt" beforeDir="false" afterPath="$PROJECT_DIR$/namesrv/src/main/kotlin/com/agmtopy/kocketmq/logging/routeinfo/BrokerLiveInfo.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,6 +67,20 @@
               <path>
                 <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
                 <item name="kocketmq" type="f1a62948:ProjectNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="kocketmq" type="f1a62948:ProjectNode" />
+                <item name="namesrv" type="2d1252cf:ModuleNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="kocketmq" type="f1a62948:ProjectNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="kocketmq" type="f1a62948:ProjectNode" />
+                <item name="namesrv" type="2d1252cf:ModuleNode" />
               </path>
               <path>
                 <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
@@ -148,15 +134,21 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../rocketmq" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/namesrv/src/main/java/com/agmtopy/kocketmq/logging" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="project.structure.last.edited" value="模块" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.38640776" />
-    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+    <property name="settings.editor.selected.configurable" value="project.kotlinCompiler" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\project\kocketmq\namesrv\src\main\java\com\agmtopy\kocketmq\logging" />
+      <recent name="D:\project\kocketmq" />
+    </key>
     <key name="MoveKotlinTopLevelDeclarationsDialog.RECENTS_KEY">
+      <recent name="com.agmtopy.kocketmq.logging.routeinfo" />
+      <recent name="com.agmtopy.kocketmq.common.protocol.route" />
       <recent name="com.agmtopy.kocketmq.common.constant" />
       <recent name="com.agmtopy.kocketmq.remoting.exception.impl" />
       <recent name="com.agmtopy.kocketmq.namesrv.routeinfo" />
@@ -164,11 +156,24 @@
   </component>
   <component name="RunAnythingCache">
     <option name="myCommands">
-      <command value="gradle build" />
       <command value="gradle clean" />
+      <command value="gradle build" />
     </option>
   </component>
-  <component name="RunManager" selected="Gradle.kocketmq [clean]">
+  <component name="RunManager" selected="Kotlin.NamesrvStartupKt">
+    <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
+      <option name="arquillianRunConfiguration">
+        <value>
+          <option name="containerStateName" value="" />
+        </value>
+      </option>
+      <option name="TEST_OBJECT" value="CLASS" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="kocketmq [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -211,8 +216,16 @@
       <DebugAllEnabled>false</DebugAllEnabled>
       <method v="2" />
     </configuration>
+    <configuration name="NamesrvStartupKt" type="JetRunConfigurationType" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.agmtopy.kocketmq.logging.NamesrvStartupKt" />
+      <module name="kocketmq.namesrv.main" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Kotlin.NamesrvStartupKt" />
         <item itemvalue="Gradle.kocketmq [clean]" />
         <item itemvalue="Gradle.kocketmq [build]" />
       </list>
@@ -244,6 +257,9 @@
       <workItem from="1623858529146" duration="2609000" />
       <workItem from="1624121253433" duration="13081000" />
       <workItem from="1624185846562" duration="7025000" />
+      <workItem from="1625055154431" duration="773000" />
+      <workItem from="1625056001864" duration="3862000" />
+      <workItem from="1625061312747" duration="2162000" />
     </task>
     <task id="LOCAL-00001" summary="初始化项目">
       <created>1622829642348</created>
@@ -287,7 +303,14 @@
       <option name="project" value="LOCAL" />
       <updated>1623687658393</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="增加LICENSE">
+      <created>1625055293654</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1625055293654</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -340,7 +363,8 @@
     <MESSAGE value="暂存" />
     <MESSAGE value="初始化Namesrv部分代码" />
     <MESSAGE value="增加readme文件" />
-    <option name="LAST_COMMIT_MESSAGE" value="增加readme文件" />
+    <MESSAGE value="增加LICENSE" />
+    <option name="LAST_COMMIT_MESSAGE" value="增加LICENSE" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

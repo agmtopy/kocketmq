@@ -23,7 +23,7 @@ object RocketMQSerializable {
         // int code(~32767)
         headerBuffer.putShort(cmd.code as Short)
         // LanguageCode language
-        headerBuffer.put(cmd.getLanguage().getCode())
+        headerBuffer.put(cmd.getLanguage().code)
         // int version(~32767)
         headerBuffer.putShort(cmd.version as Short)
         // int opaque
@@ -97,7 +97,7 @@ object RocketMQSerializable {
         // int code(~32767)
         cmd.code = headerBuffer.short.toInt()
         // LanguageCode language
-        cmd.setLanguage(LanguageCode.valueOf(headerBuffer.get()))
+        cmd.setLanguage(LanguageCode.valueOf(headerBuffer.get())!!)
         // int version(~32767)
         cmd.version = headerBuffer.short.toInt()
         // int opaque

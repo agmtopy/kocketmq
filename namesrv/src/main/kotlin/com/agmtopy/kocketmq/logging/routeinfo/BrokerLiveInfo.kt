@@ -1,4 +1,4 @@
-package com.agmtopy.kocketmq.remoting.protocol.structure
+package com.agmtopy.kocketmq.logging.routeinfo
 
 import com.agmtopy.kocketmq.common.DataVersion
 import io.netty.channel.Channel

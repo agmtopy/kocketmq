@@ -83,12 +83,12 @@ class KVConfigManager internal constructor(var namesrvController: NamesrvControl
                 kvConfigSerializeWrapper.setConfigTable(configTable)
                 val content = kvConfigSerializeWrapper.toJson()
                 if (null != content) {
-                    MixAll.string2File(content, namesrvController.namesrvConfig.getKvConfigPath()!!)
+                    MixAll.string2File(content, namesrvController.namesrvConfig.kvConfigPath!!)
                 }
             } catch (e: IOException) {
                 log.error(
                     "persist kvconfig Exception, "
-                            + namesrvController.namesrvConfig.getKvConfigPath(), e
+                            + namesrvController.namesrvConfig.kvConfigPath, e
                 )
             } finally {
                 this.lock.readLock().unlock()

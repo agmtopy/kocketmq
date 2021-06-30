@@ -57,7 +57,7 @@ abstract class InternalLoggerFactory {
             }
 
             //3. 无factory时抛出异常
-            throw RuntimeException("[RocketMQ] Logger init failed, please check logger")
+            throw RuntimeException("[KocketMQ] Logger init failed, please check logger")
         }
     }
 

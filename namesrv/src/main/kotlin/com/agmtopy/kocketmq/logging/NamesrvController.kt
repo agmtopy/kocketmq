@@ -7,6 +7,8 @@ import com.agmtopy.kocketmq.common.namesrv.NamesrvConfig
 import com.agmtopy.kocketmq.common.util.FileWatchService
 import com.agmtopy.kocketmq.logging.inner.InternalLoggerFactory
 import com.agmtopy.kocketmq.logging.kvconfig.KVConfigManager
+import com.agmtopy.kocketmq.logging.processor.ClusterTestRequestProcessor
+import com.agmtopy.kocketmq.logging.processor.DefaultRequestProcessor
 import com.agmtopy.kocketmq.logging.routeinfo.BrokerHousekeepingService
 import com.agmtopy.kocketmq.logging.routeinfo.RouteInfoManager
 import com.agmtopy.kocketmq.remoting.RemotingServer
@@ -55,7 +57,7 @@ class NamesrvController(var namesrvConfig: NamesrvConfig, var nettyServerConfig:
         //2. 初始化remotingServer
         this.remotingServer = NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService)
         //3. 创建远程服务线程池(根据config配置文件创建默认的大小的固定线程池)
-        val threadPoolExecutor = ThreadPoolExecutor(
+        this.remotingExecutor = ThreadPoolExecutor(
             this.nettyServerConfig.getServerWorkerThreads(),
             this.nettyServerConfig.getServerWorkerThreads(),
             0L,
@@ -66,14 +68,24 @@ class NamesrvController(var namesrvConfig: NamesrvConfig, var nettyServerConfig:
         //4. 注册Namesrv请求的处理器
         this.registerProcessor()
 
-        //5. 设置定期处理broker的无效任务(@TODO 应抽象为统一的namesrv的定时任务)
+        //5. 定期清理无效broker(@TODO 应抽象为统一的namesrv的定时任务)
         this.scheduledExecutorService.scheduleAtFixedRate(
-            Runnable { routeInfoManager.scanNotActiveBroker() },
+            { routeInfoManager.scanNotActiveBroker() },
             5,
             10,
             TimeUnit.SECONDS
         )
 
+        //6. 打印namesrv配置信息
+        this.scheduledExecutorService.scheduleAtFixedRate(
+            { kvConfigManager.printAllPeriodically() },
+            5,
+            10,
+            TimeUnit.SECONDS
+        )
+
+        //7.tls相关操作
+        //@TODO
         return false
     }
 
@@ -81,7 +93,7 @@ class NamesrvController(var namesrvConfig: NamesrvConfig, var nettyServerConfig:
      * 向RemotingServer注册Namesrv请求处理器,
      */
     private fun registerProcessor() {
-        //判断是否为集群测试(集群测试@TODO 先按下不表)
+        //判断是否为集群测试(集群测试@TODO)
         if (namesrvConfig.isClusterTest()) {
             remotingServer.registerDefaultProcessor(
                 ClusterTestRequestProcessor(this, namesrvConfig.getProductEnvName()),
@@ -90,7 +102,6 @@ class NamesrvController(var namesrvConfig: NamesrvConfig, var nettyServerConfig:
         } else {
             remotingServer.registerDefaultProcessor(DefaultRequestProcessor(this), remotingExecutor)
         }
-
     }
 
     /**

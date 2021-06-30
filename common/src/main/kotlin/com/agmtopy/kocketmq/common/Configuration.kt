@@ -2,6 +2,7 @@ package com.agmtopy.kocketmq.common
 
 import com.agmtopy.kocketmq.common.namesrv.NamesrvConfig
 import com.agmtopy.kocketmq.logging.InternalLogger
+import java.io.IOException
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.*
@@ -47,7 +48,7 @@ class Configuration {
      */
     fun registerConfig(configObject: Any?): Configuration {
         try {
-
+            configObject!!
         } catch (e: InterruptedException) {
 
         }
@@ -101,11 +102,8 @@ class Configuration {
         // reload from config object ?
         for (configObject in configObjectList) {
             val properties: Properties = MixAll.object2Properties(configObject)!!
-            if (properties != null) {
-                merge(properties, this.allConfigs)
-            } else {
-                log.warn("getAllConfigsInternal object2Properties is null, {}", configObject.javaClass)
-            }
+            merge(properties, this.allConfigs)
+            log.warn("getAllConfigsInternal object2Properties is null, {}", configObject.javaClass)
         }
         run { stringBuilder.append(MixAll.properties2String(this.allConfigs)) }
         return stringBuilder.toString()
@@ -135,5 +133,64 @@ class Configuration {
             }
             to[key] = fromObj
         }
+    }
+
+    fun update(properties: Properties?) {
+        try {
+            readWriteLock.writeLock().lockInterruptibly()
+            try {
+                // the property must be exist when update
+                mergeIfExist(properties!!, allConfigs)
+                for (configObject in configObjectList) {
+                    // not allConfigs to update...
+                    MixAll.properties2Object(properties, configObject)
+                }
+                dataVersion!!.nextVersion()
+            } finally {
+                readWriteLock.writeLock().unlock()
+            }
+        } catch (e: InterruptedException) {
+            log.error("update lock error, {}", properties)
+            return
+        }
+        persist()
+    }
+
+    fun persist() {
+        try {
+            readWriteLock.readLock().lockInterruptibly()
+            try {
+                val allConfigs = getAllConfigsInternal()
+                MixAll.string2File(allConfigs, getStorePath())
+            } catch (e: IOException) {
+                log.error("persist string2File error, ", e)
+            } finally {
+                readWriteLock.readLock().unlock()
+            }
+        } catch (e: InterruptedException) {
+            log.error("persist lock error")
+        }
+    }
+
+    private fun getStorePath(): String {
+        var realStorePath: String? = null
+        try {
+            readWriteLock.readLock().lockInterruptibly()
+            try {
+                realStorePath = storePath
+                if (storePathFromConfig) {
+                    try {
+                        realStorePath = storePathField[storePathObject] as String
+                    } catch (e: IllegalAccessException) {
+                        log.error("getStorePath error, ", e)
+                    }
+                }
+            } finally {
+                readWriteLock.readLock().unlock()
+            }
+        } catch (e: InterruptedException) {
+            log.error("getStorePath lock error")
+        }
+        return realStorePath!!
     }
 }

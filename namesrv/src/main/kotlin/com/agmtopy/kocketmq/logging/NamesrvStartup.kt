@@ -11,30 +11,6 @@ import java.lang.IllegalArgumentException
  * NamesrvStartup 启动类
  */
 class NamesrvStartup {
-
-    /**
-     * 主函数入口
-     */
-    fun main(args: Array<String>) {
-        main0(args)
-    }
-
-    /**
-     * 具体执行逻辑:避免在main函数中添加过多的逻辑
-     */
-    fun main0(args: Array<String>) {
-        try {
-            var controller = createNamesrvController(args)
-            start(controller)
-            val tip =
-                "The Name Server boot success. serializeType=" + RemotingCommand.getSerializeTypeConfigInThisServer()
-            log!!.info(tip);
-            println(tip)
-        } catch (e: Throwable) {
-
-        }
-    }
-
     /**
      * 静态对象
      */
@@ -76,5 +52,27 @@ class NamesrvStartup {
         private fun buildLog(): InternalLogger? {
             return InternalLoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
         }
+
+        /**
+         * 具体执行逻辑:避免在main函数中添加过多的逻辑
+         */
+        fun main0(args: Array<String>) {
+            try {
+                var controller = createNamesrvController(args)
+                start(controller)
+                val tip =
+                    "The Name Server boot success. serializeType=" + RemotingCommand.getSerializeTypeConfigInThisServer()
+                log!!.info(tip);
+                println(tip)
+            } catch (e: Throwable) {
+            }
+        }
     }
+}
+
+/**
+ * 主函数入口
+ */
+fun main(args: Array<String>) {
+    NamesrvStartup.main0(args)
 }

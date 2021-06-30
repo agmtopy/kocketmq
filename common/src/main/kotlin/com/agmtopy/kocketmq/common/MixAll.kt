@@ -5,6 +5,7 @@ import com.agmtopy.kocketmq.common.util.FAQUrl
 import com.agmtopy.kocketmq.logging.InternalLogger
 import com.agmtopy.kocketmq.logging.inner.InternalLoggerFactory
 import java.io.*
+import java.lang.Boolean
 import java.lang.management.ManagementFactory
 import java.lang.reflect.Modifier
 import java.net.Inet6Address
@@ -12,6 +13,13 @@ import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.util.*
+import kotlin.Any
+import kotlin.Exception
+import kotlin.Long
+import kotlin.RuntimeException
+import kotlin.String
+import kotlin.Throwable
+import kotlin.Throws
 
 class MixAll {
 
@@ -225,6 +233,45 @@ class MixAll {
                 }
             }
             return sb.toString()
+        }
+
+        fun properties2Object(p: Properties, `object`: Any) {
+            val methods = `object`.javaClass.methods
+            for (method in methods) {
+                val mn = method.name
+                if (mn.startsWith("set")) {
+                    try {
+                        val tmp = mn.substring(4)
+                        val first = mn.substring(3, 4)
+                        val key = first.toLowerCase() + tmp
+                        val property = p.getProperty(key)
+                        if (property != null) {
+                            val pt = method.parameterTypes
+                            if (pt != null && pt.size > 0) {
+                                val cn = pt[0].simpleName
+                                var arg: Any? = null
+                                arg = if (cn == "int" || cn == "Integer") {
+                                    property.toInt()
+                                } else if (cn == "long" || cn == "Long") {
+                                    property.toLong()
+                                } else if (cn == "double" || cn == "Double") {
+                                    property.toDouble()
+                                } else if (cn == "boolean" || cn == "Boolean") {
+                                    Boolean.parseBoolean(property)
+                                } else if (cn == "float" || cn == "Float") {
+                                    property.toFloat()
+                                } else if (cn == "String") {
+                                    property
+                                } else {
+                                    continue
+                                }
+                                method.invoke(`object`, arg)
+                            }
+                        }
+                    } catch (ignored: Throwable) {
+                    }
+                }
+            }
         }
     }
 

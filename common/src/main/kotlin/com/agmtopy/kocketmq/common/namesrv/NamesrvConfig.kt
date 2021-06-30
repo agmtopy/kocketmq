@@ -36,14 +36,6 @@ class NamesrvConfig {
         this.rocketmqHome = rocketmqHome
     }
 
-    fun getKvConfigPath(): String? {
-        return kvConfigPath
-    }
-
-    fun setKvConfigPath(kvConfigPath: String) {
-        this.kvConfigPath = kvConfigPath
-    }
-
     fun getProductEnvName(): String? {
         return productEnvName
     }

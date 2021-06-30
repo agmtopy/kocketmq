@@ -1,7 +1,7 @@
 package com.agmtopy.kocketmq.common.protocol.body
 
 import com.agmtopy.kocketmq.remoting.protocol.RemotingSerializable
-import com.agmtopy.kocketmq.remoting.protocol.structure.BrokerData
+import com.agmtopy.kocketmq.common.protocol.route.BrokerData
 
 class ClusterInfo : RemotingSerializable() {
     private var brokerAddrTable: java.util.HashMap<String, BrokerData>? = null

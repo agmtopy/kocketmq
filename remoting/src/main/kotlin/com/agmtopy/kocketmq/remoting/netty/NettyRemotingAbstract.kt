@@ -1,7 +1,5 @@
 package com.agmtopy.kocketmq.remoting.netty
 
-import com.agmtopy.kocketmq.common.concurrent.ServiceThread
-import com.agmtopy.kocketmq.logging.InternalLogger
 import com.agmtopy.kocketmq.logging.inner.InternalLoggerFactory
 import com.agmtopy.kocketmq.remoting.ChannelEventListener
 import com.agmtopy.kocketmq.remoting.InvokeCallback
@@ -10,6 +8,7 @@ import com.agmtopy.kocketmq.remoting.RemotingCommand
 import com.agmtopy.kocketmq.remoting.common.Pair
 import com.agmtopy.kocketmq.remoting.common.RemotingHelper
 import com.agmtopy.kocketmq.remoting.common.SemaphoreReleaseOnlyOnce
+import com.agmtopy.kocketmq.remoting.common.ServiceThread
 import com.agmtopy.kocketmq.remoting.exception.impl.RemotingSendRequestException
 import com.agmtopy.kocketmq.remoting.exception.impl.RemotingTimeoutException
 import com.agmtopy.kocketmq.remoting.exception.impl.RemotingTooMuchRequestException
@@ -25,54 +24,55 @@ import java.util.concurrent.*
 /**
  * 对Netty的抽象
  */
+
 abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
     /**
-     * 使用信号量限制正在进行的单向请求的最大数量，从而保护系统内存占用
+     * Semaphore to limit maximum number of on-going one-way requests, which protects system memory footprint.
      */
-    private val semaphoreOneway: Semaphore
+    protected val semaphoreOneway: Semaphore
 
     /**
-     * 使用信号量限制正在进行的异步请求的最大数量，从而保护系统内存占用
+     * Semaphore to limit maximum number of on-going asynchronous requests, which protects system memory footprint.
      */
-    private val semaphoreAsync: Semaphore
+    protected val semaphoreAsync: Semaphore
 
     /**
-     * 缓存所有正在进行的请求
+     * This map caches all on-going requests.
      */
-    private val responseTable: ConcurrentMap<Int, ResponseFuture> = ConcurrentHashMap(256)
+    protected val responseTable: ConcurrentMap<Int, ResponseFuture> = ConcurrentHashMap(256)
 
     /**
-     * 这个容器保存每个请求的所有处理器, 我们通过在这个Map中查找响应处理器来处理请求
+     * This container holds all processors per request code, aka, for each incoming request, we may look up the
+     * responding processor in this map to handle the request.
      */
-    val processorTable = HashMap<Int, Pair<NettyRequestProcessor?, ExecutorService?>>(64)
+    protected val processorTable = HashMap<Int, Pair<NettyRequestProcessor, ExecutorService>>(64)
 
     /**
-     * Netty处理器,定义类型为[ChannelEventListener].
+     * Executor to feed netty events to user defined [ChannelEventListener].
      */
-    internal val nettyEventExecutor = NettyEventExecutor()
+    protected val nettyEventExecutor = NettyEventExecutor()
 
     /**
-     * 默认的[请求-处理器]
+     * The default request processor to use in case there is no exact match in [.processorTable] per request code.
      */
-    protected var defaultRequestProcessor: com.agmtopy.kocketmq.remoting.common.Pair<NettyRequestProcessor, ExecutorService>? =
-        null
+    protected var defaultRequestProcessor: Pair<NettyRequestProcessor, ExecutorService>? = null
 
     /**
-     * SSL context  [SslHandler].
+     * SSL context via which to create [SslHandler].
      */
     @Volatile
     protected var sslContext: SslContext? = null
 
     /**
-     * 自定义 rpc hooks
+     * custom rpc hooks
      */
-    protected var rpcHooks: MutableList<RPCHook> = mutableListOf()
+    protected var rpcHooks: List<RPCHook> = ArrayList()
 
     companion object {
         /**
          * Remoting logger instance.
          */
-        val log: InternalLogger = InternalLoggerFactory.getLogger(RemotingHelper.ROCKETMQ_REMOTING)
+        private val log = InternalLoggerFactory.getLogger(RemotingHelper.ROCKETMQ_REMOTING)
 
         init {
             NettyLogger.initNettyLogger()
@@ -80,23 +80,41 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
     }
 
     /**
-     * 自定义 channel event listener.
+     * Custom channel event listener.
+     *
+     * @return custom channel event listener if defined; null otherwise.
      */
-    abstract var channelEventListener: ChannelEventListener?
+    abstract fun getChannelEventListener(): ChannelEventListener?
 
     /**
-     * 向Executor放入event事件
+     * Put a netty event to the executor.
+     *
+     * @param event Netty event instance.
      */
     fun putNettyEvent(event: NettyEvent) {
         nettyEventExecutor.putNettyEvent(event)
     }
 
     /**
-     * msg-command分为两种：request、response
+     * Entry of incoming command processing.
+     *
+     *
+     *
+     * **Note:**
+     * The incoming remoting command may be
+     *
+     *  * An inquiry request from a remote peer component;
+     *  * A response to a previous request issued by this very participant.
+     *
+     *
+     *
+     * @param ctx Channel handler context.
+     * @param msg incoming remoting command.
+     * @throws Exception if there were any error while processing the incoming command.
      */
     @Throws(Exception::class)
     fun processMessageReceived(ctx: ChannelHandlerContext, msg: RemotingCommand?) {
-        val cmd: RemotingCommand? = msg
+        val cmd = msg
         if (cmd != null) {
             when (cmd.type) {
                 RemotingCommandType.REQUEST_COMMAND -> processRequestCommand(ctx, cmd)
@@ -108,7 +126,7 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
     }
 
     protected fun doBeforeRpcHooks(addr: String?, request: RemotingCommand?) {
-        if (rpcHooks.isNotEmpty()) {
+        if (rpcHooks.size > 0) {
             for (rpcHook: RPCHook in rpcHooks) {
                 rpcHook.doBeforeRequest(addr, request)
             }
@@ -116,7 +134,7 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
     }
 
     protected fun doAfterRpcHooks(addr: String?, request: RemotingCommand?, response: RemotingCommand?) {
-        if (rpcHooks.isNotEmpty()) {
+        if (rpcHooks.size > 0) {
             for (rpcHook: RPCHook in rpcHooks) {
                 rpcHook.doAfterResponse(addr, request, response)
             }
@@ -147,12 +165,9 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
                                     try {
                                         ctx.writeAndFlush(response)
                                     } catch (e: Throwable) {
-                                        NettyRemotingAbstract.Companion.log.error(
-                                            "process request over, but response failed",
-                                            e
-                                        )
-                                        NettyRemotingAbstract.Companion.log.error(cmd.toString())
-                                        NettyRemotingAbstract.Companion.log.error(response.toString())
+                                        log.error("process request over, but response failed", e)
+                                        log.error(cmd.toString())
+                                        log.error(response.toString())
                                     }
                                 } else {
                                 }
@@ -160,18 +175,18 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
                         }
                     }
                     if (pair.object1 is AsyncNettyRequestProcessor) {
-                        val processor: AsyncNettyRequestProcessor = pair.object1 as AsyncNettyRequestProcessor
+                        val processor = pair.object1 as AsyncNettyRequestProcessor
                         processor.asyncProcessRequest(ctx, cmd, callback)
                     } else {
                         val processor: NettyRequestProcessor = pair.object1
-                        val response: RemotingCommand? = processor.processRequest(ctx, cmd)
+                        val response = processor.processRequest(ctx, cmd)
                         callback.callback(response)
                     }
                 } catch (e: Throwable) {
                     log.error("process request exception", e)
                     log.error(cmd.toString())
                     if (!cmd.isOnewayRPC) {
-                        val response: RemotingCommand? = RemotingCommand.createResponseCommand(
+                        val response = RemotingCommand.createResponseCommand(
                             RemotingSysResponseCode.SYSTEM_ERROR,
                             RemotingHelper.exceptionSimpleDesc(e)
                         )
@@ -181,7 +196,7 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
                 }
             }
             if (pair.object1.rejectRequest()) {
-                val response: RemotingCommand? = RemotingCommand.createResponseCommand(
+                val response = RemotingCommand.createResponseCommand(
                     RemotingSysResponseCode.SYSTEM_BUSY,
                     "[REJECTREQUEST]system busy, start flow control for a while"
                 )
@@ -194,7 +209,7 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
                 pair.object2.submit(requestTask)
             } catch (e: RejectedExecutionException) {
                 if (System.currentTimeMillis() % 10000 == 0L) {
-                    NettyRemotingAbstract.Companion.log.warn(
+                    log.warn(
                         RemotingHelper.parseChannelRemoteAddr(ctx.channel())
                             .toString() + ", too many requests and system thread pool busy, RejectedExecutionException "
                                 + pair.object2.toString()
@@ -202,7 +217,7 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
                     )
                 }
                 if (!cmd.isOnewayRPC) {
-                    val response: RemotingCommand? = RemotingCommand.createResponseCommand(
+                    val response = RemotingCommand.createResponseCommand(
                         RemotingSysResponseCode.SYSTEM_BUSY,
                         "[OVERLOAD]system busy, start flow control for a while"
                     )
@@ -211,14 +226,12 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
                 }
             }
         } else {
-            val error = " request type " + cmd!!.code.toString() + " not supported"
-            val response: RemotingCommand? =
+            val error = " request type " + cmd.code.toString() + " not supported"
+            val response =
                 RemotingCommand.createResponseCommand(RemotingSysResponseCode.REQUEST_CODE_NOT_SUPPORTED, error)
             response!!.opaque = opaque
             ctx.writeAndFlush(response)
-            NettyRemotingAbstract.Companion.log.error(
-                RemotingHelper.parseChannelRemoteAddr(ctx.channel()).toString() + error
-            )
+            log.error(RemotingHelper.parseChannelRemoteAddr(ctx.channel()).toString() + error)
         }
     }
 
@@ -232,21 +245,17 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
         val opaque: Int = cmd.opaque
         val responseFuture = responseTable[opaque]
         if (responseFuture != null) {
-            responseFuture!!.responseCommand = cmd
+            responseFuture.responseCommand = cmd
             responseTable.remove(opaque)
-            if (responseFuture!!.invokeCallback != null) {
+            if (responseFuture.invokeCallback != null) {
                 executeInvokeCallback(responseFuture)
             } else {
                 responseFuture.putResponse(cmd)
                 responseFuture.release()
             }
         } else {
-            NettyRemotingAbstract.Companion.log.warn(
-                "receive response, but not matched any request, " + RemotingHelper.parseChannelRemoteAddr(
-                    ctx.channel()
-                )
-            )
-            NettyRemotingAbstract.Companion.log.warn(cmd.toString())
+            log.warn("receive response, but not matched any request, " + RemotingHelper.parseChannelRemoteAddr(ctx.channel()))
+            log.warn(cmd.toString())
         }
     }
 
@@ -255,27 +264,21 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
      */
     private fun executeInvokeCallback(responseFuture: ResponseFuture) {
         var runInThisThread = false
-        val executor = callbackExecutor
+        val executor = getCallbackExecutor()
         if (executor != null) {
             try {
                 executor.submit(Runnable {
                     try {
                         responseFuture.executeInvokeCallback()
                     } catch (e: Throwable) {
-                        NettyRemotingAbstract.Companion.log.warn(
-                            "execute callback in executor exception, and callback throw",
-                            e
-                        )
+                        log.warn("execute callback in executor exception, and callback throw", e)
                     } finally {
                         responseFuture.release()
                     }
                 })
             } catch (e: Exception) {
                 runInThisThread = true
-                NettyRemotingAbstract.Companion.log.warn(
-                    "execute callback in executor exception, maybe executor busy",
-                    e
-                )
+                log.warn("execute callback in executor exception, maybe executor busy", e)
             }
         } else {
             runInThisThread = true
@@ -284,7 +287,7 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
             try {
                 responseFuture.executeInvokeCallback()
             } catch (e: Throwable) {
-                NettyRemotingAbstract.Companion.log.warn("executeInvokeCallback Exception", e)
+                log.warn("executeInvokeCallback Exception", e)
             } finally {
                 responseFuture.release()
             }
@@ -295,21 +298,21 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
      * Custom RPC hook.
      * Just be compatible with the previous version, use getRPCHooks instead.
      */
-    @get:Deprecated("")
-    protected val rPCHook: RPCHook?
-        protected get() {
-            return if (rpcHooks.size > 0) {
-                rpcHooks.get(0)
-            } else null
-        }
+    @Deprecated("")
+    protected fun getRPCHook(): RPCHook? {
+        return if (rpcHooks.size > 0) {
+            rpcHooks.get(0)
+        } else null
+    }
 
     /**
      * Custom RPC hooks.
      *
      * @return RPC hooks if specified; null otherwise.
      */
-    val rPCHooks: List<Any>
-        get() = rpcHooks
+    fun getRPCHooks(): List<RPCHook> {
+        return rpcHooks
+    }
 
     /**
      * This method specifies thread pool to use while invoking callback methods.
@@ -317,7 +320,7 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
      * @return Dedicated thread pool instance if specified; or null if the callback is supposed to be executed in the
      * netty event-loop thread.
      */
-    abstract val callbackExecutor: ExecutorService?
+    abstract fun getCallbackExecutor(): ExecutorService?
 
     /**
      *
@@ -335,14 +338,14 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
                 rep.release()
                 it.remove()
                 rfList.add(rep)
-                NettyRemotingAbstract.Companion.log.warn("remove timeout request, $rep")
+                log.warn("remove timeout request, $rep")
             }
         }
         for (rf: ResponseFuture in rfList) {
             try {
                 executeInvokeCallback(rf)
             } catch (e: Throwable) {
-                NettyRemotingAbstract.Companion.log.warn("scanResponseTable, operationComplete Exception", e)
+                log.warn("scanResponseTable, operationComplete Exception", e)
             }
         }
     }
@@ -368,13 +371,12 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
                 responseTable.remove(opaque)
                 responseFuture.cause = f.cause()
                 responseFuture.putResponse(null)
-                NettyRemotingAbstract.Companion.log.warn("send a request command to channel <$addr> failed.")
+                log.warn("send a request command to channel <$addr> failed.")
             })
-            val responseCommand: RemotingCommand = responseFuture.waitResponse(timeoutMillis)
+            val responseCommand = responseFuture.waitResponse(timeoutMillis)
                 ?: if (responseFuture.sendRequestOK) {
                     throw RemotingTimeoutException(
-                        RemotingHelper.parseSocketAddressAddr(addr),
-                        timeoutMillis,
+                        RemotingHelper.parseSocketAddressAddr(addr), timeoutMillis,
                         responseFuture.cause
                     )
                 } else {
@@ -418,17 +420,16 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
                         return@ChannelFutureListener
                     }
                     requestFail(opaque)
-                    NettyRemotingAbstract.Companion.log.warn(
+                    log.warn(
                         "send a request command to channel <{}> failed.",
                         RemotingHelper.parseChannelRemoteAddr(channel)
                     )
                 })
             } catch (e: Exception) {
                 responseFuture.release()
-                NettyRemotingAbstract.Companion.log.warn(
-                    "send a request command to channel <" + RemotingHelper.parseChannelRemoteAddr(
-                        channel
-                    ).toString() + "> Exception", e
+                log.warn(
+                    "send a request command to channel <" + RemotingHelper.parseChannelRemoteAddr(channel)
+                        .toString() + "> Exception", e
                 )
                 throw RemotingSendRequestException(RemotingHelper.parseChannelRemoteAddr(channel), e)
             }
@@ -442,7 +443,7 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
                     semaphoreAsync.queueLength,
                     semaphoreAsync.availablePermits()
                 )
-                NettyRemotingAbstract.Companion.log.warn(info)
+                log.warn(info)
                 throw RemotingTimeoutException(info)
             }
         }
@@ -456,7 +457,7 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
             try {
                 executeInvokeCallback(responseFuture)
             } catch (e: Throwable) {
-                NettyRemotingAbstract.Companion.log.warn("execute callback in requestFail, and callback throw", e)
+                log.warn("execute callback in requestFail, and callback throw", e)
             } finally {
                 responseFuture.release()
             }
@@ -471,7 +472,7 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
         val it: Iterator<Map.Entry<Int, ResponseFuture>> = responseTable.entries.iterator()
         while (it.hasNext()) {
             val entry = it.next()
-            if (entry.value!!.processChannel === channel) {
+            if (entry.value.processChannel === channel) {
                 val opaque: Int = entry.key
                 if (opaque != null) {
                     requestFail(opaque)
@@ -495,12 +496,12 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
                 channel.writeAndFlush(request).addListener(ChannelFutureListener { f ->
                     once.release()
                     if (!f.isSuccess) {
-                        NettyRemotingAbstract.Companion.log.warn("send a request command to channel <" + channel.remoteAddress() + "> failed.")
+                        log.warn("send a request command to channel <" + channel.remoteAddress() + "> failed.")
                     }
                 })
             } catch (e: Exception) {
                 once.release()
-                NettyRemotingAbstract.Companion.log.warn("write send a request command to channel <" + channel.remoteAddress() + "> failed.")
+                log.warn("write send a request command to channel <" + channel.remoteAddress() + "> failed.")
                 throw RemotingSendRequestException(RemotingHelper.parseChannelRemoteAddr(channel), e)
             }
         } else {
@@ -513,52 +514,44 @@ abstract class NettyRemotingAbstract(permitsOneway: Int, permitsAsync: Int) {
                     semaphoreOneway.queueLength,
                     semaphoreOneway.availablePermits()
                 )
-                NettyRemotingAbstract.Companion.log.warn(info)
+                log.warn(info)
                 throw RemotingTimeoutException(info)
             }
         }
     }
 
-    internal inner class NettyEventExecutor : ServiceThread() {
-        private val eventQueue: LinkedBlockingQueue<NettyEvent> = LinkedBlockingQueue<NettyEvent>()
+    inner class NettyEventExecutor() : ServiceThread() {
+        private val eventQueue = LinkedBlockingQueue<NettyEvent>()
         private val maxSize = 10000
         fun putNettyEvent(event: NettyEvent) {
             if (eventQueue.size <= maxSize) {
                 eventQueue.add(event)
             } else {
-                NettyRemotingAbstract.Companion.log.warn(
-                    "event queue size[{}] enough, so drop this event {}",
-                    eventQueue.size,
-                    event.toString()
-                )
+                log.warn("event queue size[{}] enough, so drop this event {}", eventQueue.size, event.toString())
             }
         }
 
         override fun run() {
-            NettyRemotingAbstract.Companion.log.info(serviceName + " service started")
-            val listener: ChannelEventListener? = channelEventListener
+            log.info(serviceName + " service started")
+            val listener = getChannelEventListener()
             while (!this.isStopped) {
                 try {
-                    val event: NettyEvent? = eventQueue.poll(3000, TimeUnit.MILLISECONDS)
+                    val event = eventQueue.poll(3000, TimeUnit.MILLISECONDS)
                     if (event != null && listener != null) {
                         when (event.getType()) {
                             NettyEventType.IDLE -> listener.onChannelIdle(event.remoteAddr, event.channel)
                             NettyEventType.CLOSE -> listener.onChannelClose(event.remoteAddr, event.channel)
-                            NettyEventType.CONNECT -> listener.onChannelConnect(
-                                event.remoteAddr,
-                                event.channel
-                            )
-                            NettyEventType.EXCEPTION -> listener.onChannelException(
-                                event.remoteAddr,
-                                event.channel
-                            )
+                            NettyEventType.CONNECT -> listener.onChannelConnect(event.remoteAddr, event.channel)
+                            NettyEventType.EXCEPTION -> listener.onChannelException(event.remoteAddr, event.channel)
+                            else -> {
+                            }
                         }
                     }
                 } catch (e: Exception) {
-                    NettyRemotingAbstract.Companion.log.warn(serviceName + " service has exception. ", e)
+                    log.warn(serviceName + " service has exception. ", e)
                 }
             }
-            NettyRemotingAbstract.Companion.log.info(serviceName + " service end")
+            log.info(serviceName + " service end")
         }
 
         override val serviceName: String

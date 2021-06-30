@@ -1,7 +1,6 @@
 package com.agmtopy.kocketmq.common.protocol.route
 
 import com.agmtopy.kocketmq.remoting.protocol.RemotingSerializable
-import com.agmtopy.kocketmq.remoting.protocol.structure.BrokerData
 import com.agmtopy.kocketmq.remoting.protocol.structure.QueueData
 
 

@@ -32,7 +32,7 @@ interface RemotingServer : RemotingService {
     /**
      * 获取NettyRequestProcessor和ExecutorService
      */
-    fun getProcessorPair(requestCode: Int): Pair<NettyRequestProcessor?, ExecutorService?>?
+    fun getProcessorPair(requestCode: Int): Pair<NettyRequestProcessor, ExecutorService>?
 
     /**
      * 同步执行

@@ -30,7 +30,7 @@ import java.io.UnsupportedEncodingException
 import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 
-class DefaultRequestProcessor(namesrvController: NamesrvController) : AsyncNettyRequestProcessor(),
+open class DefaultRequestProcessor(namesrvController: NamesrvController) : AsyncNettyRequestProcessor(),
     NettyRequestProcessor {
     protected val namesrvController: NamesrvController
 
@@ -495,7 +495,7 @@ class DefaultRequestProcessor(namesrvController: NamesrvController) : AsyncNetty
                 response.remark = "string2Properties error"
                 return response
             }
-            namesrvController.getConfiguration().update(properties)
+            namesrvController.configuration.update(properties)
         }
         response.code = RemotingSysResponseCode.SUCCESS
         response.remark = null

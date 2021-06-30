@@ -10,7 +10,6 @@ sourceCompatibility = 11
 
 dependencies {
     implementation project(":logging")
-    implementation project(":common")
 
     //第三方jar
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"

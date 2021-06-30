@@ -1,4 +1,4 @@
-package com.agmtopy.kocketmq.remoting.protocol.structure
+package com.agmtopy.kocketmq.common.protocol.route
 
 import com.agmtopy.kocketmq.common.MixAll
 import java.util.*

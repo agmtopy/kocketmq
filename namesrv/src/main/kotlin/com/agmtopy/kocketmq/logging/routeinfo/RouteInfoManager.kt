@@ -14,8 +14,7 @@ import com.agmtopy.kocketmq.logging.InternalLogger
 import com.agmtopy.kocketmq.logging.inner.InternalLoggerFactory
 import com.agmtopy.kocketmq.remoting.common.RemotingUtil
 import com.agmtopy.kocketmq.remoting.protocol.body.TopicList
-import com.agmtopy.kocketmq.remoting.protocol.structure.BrokerData
-import com.agmtopy.kocketmq.remoting.protocol.structure.BrokerLiveInfo
+import com.agmtopy.kocketmq.common.protocol.route.BrokerData
 import com.agmtopy.kocketmq.remoting.protocol.structure.QueueData
 import io.netty.channel.Channel
 import java.util.*

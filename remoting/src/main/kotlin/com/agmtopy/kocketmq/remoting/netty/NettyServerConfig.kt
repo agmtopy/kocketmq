@@ -51,28 +51,12 @@ class NettyServerConfig: Cloneable {
         this.serverSelectorThreads = serverSelectorThreads
     }
 
-    fun getServerOnewaySemaphoreValue(): Int {
-        return serverOnewaySemaphoreValue
-    }
-
-    fun setServerOnewaySemaphoreValue(serverOnewaySemaphoreValue: Int) {
-        this.serverOnewaySemaphoreValue = serverOnewaySemaphoreValue
-    }
-
-    fun getServerCallbackExecutorThreads(): Int {
+   fun getServerCallbackExecutorThreads(): Int {
         return serverCallbackExecutorThreads
     }
 
     fun setServerCallbackExecutorThreads(serverCallbackExecutorThreads: Int) {
         this.serverCallbackExecutorThreads = serverCallbackExecutorThreads
-    }
-
-    fun getServerAsyncSemaphoreValue(): Int {
-        return serverAsyncSemaphoreValue
-    }
-
-    fun setServerAsyncSemaphoreValue(serverAsyncSemaphoreValue: Int) {
-        this.serverAsyncSemaphoreValue = serverAsyncSemaphoreValue
     }
 
     fun getServerChannelMaxIdleTimeSeconds(): Int {
