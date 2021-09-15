@@ -1,0 +1,20 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+repositories {
+    maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
+    mavenCentral()
+}
+
+dependencies {
+    //第三方jar
+    //kotlin运行环境
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    //apache Commons CLI
+    implementation "commons-cli:commons-cli:1.3"
+    implementation "io.netty:netty-all:4.0.42.Final"
+    implementation "io.netty:netty-all:4.0.42.Final"
+    implementation 'com.google.guava:guava:28.2-jre'
+}

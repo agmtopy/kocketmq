@@ -6,8 +6,5 @@ pluginManagement {
     }
 }
 rootProject.name = 'kocketmq'
-include 'namesrv'
-include 'logging'
-include 'common'
-include 'remoting'
+include 'broker'
 

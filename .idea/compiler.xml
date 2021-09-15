@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="11" />
+    <bytecodeTargetLevel target="11">
+      <module name="kocketmq.broker" target="16" />
+      <module name="kocketmq.namesrv.main" target="16" />
+      <module name="kocketmq.namesrv.test" target="16" />
+    </bytecodeTargetLevel>
   </component>
 </project>
