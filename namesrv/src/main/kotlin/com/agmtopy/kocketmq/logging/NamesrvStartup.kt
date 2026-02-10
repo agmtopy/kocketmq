@@ -5,7 +5,6 @@ import com.agmtopy.kocketmq.common.namesrv.NamesrvConfig
 import com.agmtopy.kocketmq.logging.inner.InternalLoggerFactory
 import com.agmtopy.kocketmq.remoting.RemotingCommand
 import com.agmtopy.kocketmq.remoting.netty.NettyServerConfig
-import java.lang.IllegalArgumentException
 
 /**
  * NamesrvStartup 启动类

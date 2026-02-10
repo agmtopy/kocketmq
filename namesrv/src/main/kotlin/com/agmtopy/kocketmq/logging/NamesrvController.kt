@@ -4,7 +4,6 @@ import com.agmtopy.kocketmq.common.Configuration
 import com.agmtopy.kocketmq.common.concurrent.ThreadFactoryImpl
 import com.agmtopy.kocketmq.common.constant.LoggerName
 import com.agmtopy.kocketmq.common.namesrv.NamesrvConfig
-import com.agmtopy.kocketmq.common.util.FileWatchService
 import com.agmtopy.kocketmq.logging.inner.InternalLoggerFactory
 import com.agmtopy.kocketmq.logging.kvconfig.KVConfigManager
 import com.agmtopy.kocketmq.logging.processor.ClusterTestRequestProcessor
@@ -32,7 +31,6 @@ class NamesrvController(var namesrvConfig: NamesrvConfig, var nettyServerConfig:
     //延迟初始化-lateinit
     private lateinit var remotingServer: RemotingServer
     private lateinit var remotingExecutor: ExecutorService
-    private lateinit var fileWatchService: FileWatchService
 
     //默认成员变量
     private val scheduledExecutorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
