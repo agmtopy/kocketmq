@@ -35,13 +35,10 @@ class NamesrvStartup {
          * 启动NamesrvController
          */
         fun start(controller: NamesrvController){
-            if (controller == null) {
-                throw IllegalArgumentException("NamesrvController is null")
-            }
-
             //NamesrvController执行初始化,如果失败时退出进程
-            if(controller.initialize()){
+            if(!controller.initialize()){
                 controller.shutdown()
+                throw IllegalStateException("Failed to initialize NamesrvController")
             }
             controller.start()
         }

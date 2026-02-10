@@ -37,7 +37,9 @@ class KVConfigManager internal constructor(var namesrvController: NamesrvControl
                 )
                 //2. 保存配置文件
                 if (Objects.nonNull(configWrapper)) {
-                    configWrapper.getConfigTable()?.let { this.configTable.putAll(it) }
+                    configWrapper.getConfigTable()?.forEach { (namespace, table) ->
+                        this.configTable[namespace] = HashMap(table ?: emptyMap())
+                    }
                     log.info("load KV config table OK")
                 }
             }
@@ -180,9 +182,5 @@ class KVConfigManager internal constructor(var namesrvController: NamesrvControl
             log.error("printAllPeriodically InterruptedException", e)
         }
     }
-
-}
-
-private fun <K, V> HashMap<K, V>.putAll(from: Map<String?, Map<String?, String?>?>) {
 
 }

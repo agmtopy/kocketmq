@@ -45,7 +45,7 @@ class NamesrvController(var namesrvConfig: NamesrvConfig, var nettyServerConfig:
     init {
         kvConfigManager = KVConfigManager(this)
         routeInfoManager = RouteInfoManager()
-        brokerHousekeepingService = BrokerHousekeepingService()
+        brokerHousekeepingService = BrokerHousekeepingService(routeInfoManager)
         this.configuration = Configuration(log, arrayOf(namesrvConfig, nettyServerConfig))
         this.configuration.setStorePathFromConfig(this.namesrvConfig, "configStorePath")
     }
@@ -86,7 +86,7 @@ class NamesrvController(var namesrvConfig: NamesrvConfig, var nettyServerConfig:
 
         //7.tls相关操作
         //@TODO
-        return false
+        return true
     }
 
     /**
@@ -108,12 +108,18 @@ class NamesrvController(var namesrvConfig: NamesrvConfig, var nettyServerConfig:
      * start
      */
     fun start() {
-
+        remotingServer.start()
     }
 
     /**
      */
     fun shutdown() {
-
+        if (this::remotingServer.isInitialized) {
+            remotingServer.shutdown()
+        }
+        if (this::remotingExecutor.isInitialized) {
+            remotingExecutor.shutdown()
+        }
+        scheduledExecutorService.shutdown()
     }
 }

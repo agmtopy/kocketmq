@@ -401,9 +401,9 @@ open class DefaultRequestProcessor(namesrvController: NamesrvController) : Async
         val requestHeader: GetKVListByNamespaceRequestHeader = request.decodeCommandCustomHeader(
             GetKVListByNamespaceRequestHeader::class.java
         ) as GetKVListByNamespaceRequestHeader
-        val jsonValue: ByteArray = namesrvController.kvConfigManager.getKVListByNamespace(
+        val jsonValue: ByteArray? = namesrvController.kvConfigManager.getKVListByNamespace(
             requestHeader.namespace
-        )!!
+        )
         if (null != jsonValue) {
             response.setBody(jsonValue)
             response.code = RemotingSysResponseCode.SUCCESS

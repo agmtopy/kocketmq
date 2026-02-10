@@ -1,8 +1,7 @@
 pluginManagement {
     repositories {
-        maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
+        gradlePluginPortal()
         mavenCentral()
-        maven { url 'https://plugins.gradle.org/m2/' }
     }
 }
 rootProject.name = 'kocketmq'
@@ -10,4 +9,3 @@ include 'namesrv'
 include 'logging'
 include 'common'
 include 'remoting'
-
