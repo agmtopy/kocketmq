@@ -1,0 +1,39 @@
+KocketMQ
+Copyright 2026 The KocketMQ Authors
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+This project is a derivative work of Apache RocketMQ
+(https://github.com/apache/rocketmq).
+
+================================================================================
+
+Apache RocketMQ
+Copyright 2016-2026 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+================================================================================
+
+This project uses the following third-party libraries:
+
+Netty
+Copyright 2014 The Netty Project
+
+Licensed under the Apache License, Version 2.0.
+
+--------------------------------------------------------------------------------
+
+Kotlin Standard Library
+Copyright 2010-2021 JetBrains s.r.o.
+
+Licensed under the Apache License, Version 2.0.
+
+--------------------------------------------------------------------------------
+
+Kotlinx Coroutines
+Copyright 2016-2021 JetBrains s.r.o.
+
+Licensed under the Apache License, Version 2.0.
