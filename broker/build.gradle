@@ -1,0 +1,34 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+group 'com.agmtopy.kocketmq'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':common')
+    implementation project(':remoting')
+    implementation project(':logging')
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2"
+
+    testImplementation "org.junit.jupiter:junit-jupiter:5.5.2"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.2"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.5.2"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "11"
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "11"
+}
