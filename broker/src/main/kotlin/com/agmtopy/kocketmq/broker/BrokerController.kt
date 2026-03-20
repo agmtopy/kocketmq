@@ -2,8 +2,11 @@ package com.agmtopy.kocketmq.broker
 
 import com.agmtopy.kocketmq.broker.config.BrokerConfig
 import com.agmtopy.kocketmq.broker.offset.ConsumerOffsetManager
+import com.agmtopy.kocketmq.broker.processor.PullMessageProcessor
+import com.agmtopy.kocketmq.broker.processor.SendMessageProcessor
 import com.agmtopy.kocketmq.broker.store.MessageStoreActor
 import com.agmtopy.kocketmq.broker.topic.TopicConfigManager
+import com.agmtopy.kocketmq.common.constant.RequestCode
 import com.agmtopy.kocketmq.logging.InternalLogger
 import com.agmtopy.kocketmq.logging.inner.InternalLoggerFactory
 import com.agmtopy.kocketmq.remoting.netty.NettyRemotingServer
@@ -127,6 +130,7 @@ class BrokerController(
 
         // 2. 启动网络服务器
         log.info("Starting remoting server...")
+        registerProcessors()
         remotingServer.start()
 
         log.info("========================================")
@@ -134,6 +138,23 @@ class BrokerController(
         log.info("Broker Name: ${brokerConfig.brokerName}")
         log.info("Listen Port: ${remotingServer.localListenPort()}")
         log.info("========================================")
+    }
+
+    /**
+     * 注册请求处理器
+     */
+    private fun registerProcessors() {
+        // 发送消息处理器
+        val sendMessageProcessor = SendMessageProcessor(this)
+        remotingServer.registerProcessor(RequestCode.SEND_MESSAGE, sendMessageProcessor, null)
+        remotingServer.registerProcessor(RequestCode.SEND_MESSAGE_V2, sendMessageProcessor, null)
+        remotingServer.registerProcessor(RequestCode.SEND_BATCH_MESSAGE, sendMessageProcessor, null)
+
+        // 拉取消息处理器
+        val pullMessageProcessor = PullMessageProcessor(this)
+        remotingServer.registerProcessor(RequestCode.PULL_MESSAGE, pullMessageProcessor, null)
+
+        log.info("Request processors registered")
     }
 
     /**
