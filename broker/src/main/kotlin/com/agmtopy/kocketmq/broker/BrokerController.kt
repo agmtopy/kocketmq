@@ -1,7 +1,9 @@
 package com.agmtopy.kocketmq.broker
 
 import com.agmtopy.kocketmq.broker.config.BrokerConfig
+import com.agmtopy.kocketmq.broker.offset.ConsumerOffsetManager
 import com.agmtopy.kocketmq.broker.store.MessageStoreActor
+import com.agmtopy.kocketmq.broker.topic.TopicConfigManager
 import com.agmtopy.kocketmq.logging.InternalLogger
 import com.agmtopy.kocketmq.logging.inner.InternalLoggerFactory
 import com.agmtopy.kocketmq.remoting.netty.NettyRemotingServer
@@ -40,9 +42,15 @@ class BrokerController(
      */
     val remotingServer: NettyRemotingServer
 
-    // TODO: 添加配置管理器
-    // val topicConfigManager: TopicConfigManager
-    // val consumerOffsetManager: ConsumerOffsetManager
+    /**
+     * Topic配置管理器
+     */
+    val topicConfigManager: TopicConfigManager = TopicConfigManager(brokerConfig)
+
+    /**
+     * 消费者offset管理器
+     */
+    val consumerOffsetManager: ConsumerOffsetManager = ConsumerOffsetManager(brokerConfig)
 
     // ==================== 状态管理 ====================
 
@@ -79,12 +87,19 @@ class BrokerController(
                 }
                 log.info("Message store loaded successfully")
 
-                // TODO: 2. 加载配置管理器
-                // log.info("Loading topic config...")
-                // topicConfigManager.load()
-                //
-                // log.info("Loading consumer offset...")
-                // consumerOffsetManager.load()
+                // 2. 加载Topic配置
+                log.info("Loading topic config...")
+                val topicConfigLoaded = topicConfigManager.load()
+                if (!topicConfigLoaded) {
+                    log.warn("Load topic config failed, will use default")
+                }
+
+                // 3. 加载消费者offset
+                log.info("Loading consumer offset...")
+                val consumerOffsetLoaded = consumerOffsetManager.load()
+                if (!consumerOffsetLoaded) {
+                    log.warn("Load consumer offset failed, will start fresh")
+                }
 
                 initialized = true
                 log.info("Broker initialized successfully")
@@ -135,9 +150,12 @@ class BrokerController(
         log.info("Shutting down message store...")
         messageStore.shutdown()
 
-        // TODO: 3. 持久化配置
-        // topicConfigManager.persist()
-        // consumerOffsetManager.persist()
+        // 3. 持久化配置
+        log.info("Persisting topic config...")
+        topicConfigManager.persist()
+
+        log.info("Persisting consumer offset...")
+        consumerOffsetManager.persist()
 
         log.info("Broker shutdown complete")
     }
