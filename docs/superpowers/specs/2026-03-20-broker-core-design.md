@@ -1947,56 +1947,6 @@ fun `test send and consume message`() = runBlocking {
 }
 ```
 
-### D. 关键技术点
-
-**1. 协程最佳实践**
-
-```kotlin
-// ✅ 正确：使用suspend函数
-suspend fun putMessage(message: Message): Result
-
-// ✅ 正确：使用Channel通信
-private val channel = Channel<Request>()
-
-// ❌ 错误：使用锁
-private val lock = ReentrantLock()
-
-// ✅ 正确：Actor内部串行处理，无需锁
-for (request in channel) {
-    process(request)  // 串行
-}
-```
-
-**2. 背压控制**
-
-```kotlin
-// ✅ 正确：有界Channel
-private val channel = Channel<Request>(capacity = 1000)
-
-// 当Channel满时，send会挂起（背压）
-suspend fun send(request: Request) {
-    channel.send(request)  // 可能挂起
-}
-```
-
-**3. 优雅关闭**
-
-```kotlin
-suspend fun shutdown() {
-    // 1. 停止接收
-    server.shutdown()
-
-    // 2. 等待处理完成
-    waitForPendingRequests()
-
-    // 3. 持久化数据
-    persistData()
-
-    // 4. 取消协程
-    scope.cancel()
-}
-```
-
 ---
 
 ## 总结
