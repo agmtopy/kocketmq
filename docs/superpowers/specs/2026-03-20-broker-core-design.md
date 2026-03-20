@@ -53,6 +53,23 @@ KocketMQ是Apache RocketMQ的Kotlin重写版本，目标是：
 3. **简化版本** - 先实现单Broker（无主从复制），后续再考虑HA
 4. **协议兼容** - 保持与RocketMQ协议兼容，现有RocketMQ客户端可直接连接
 
+### 并发策略说明
+
+**Actor模型的"无锁"哲学：**
+
+本设计采用Actor模型，每个Actor通过Channel接收消息，内部串行处理，天然避免并发竞争。但以下情况需要显式同步：
+
+1. **Actor内部串行化** - 每个Actor从Channel串行消费消息，内部状态无需锁
+2. **ConcurrentHashMap** - 用于跨Actor的查找表（如topicConfigTable），这是可接受的
+3. **AtomicInteger/AtomicLong** - 用于计数器，这是可接受的
+4. **Mutex** - 仅用于复杂的状态转换（如BrokerController的状态机），确保原子性
+
+**原则：**
+- ✅ Actor内部：串行处理，无需锁
+- ✅ Actor之间：通过Channel通信，无共享状态
+- ✅ 跨Actor查找表：使用ConcurrentHashMap
+- ⚠️ 复杂状态转换：使用Mutex确保原子性
+
 ---
 
 ## 设计目标
@@ -542,6 +559,130 @@ class MappedFile(
 ```
 [totalSize][magicCode][bodyCRC][queueId][flag][sysFlag][queueOffset]
 [bodySize][body][propertiesSize][properties]
+```
+
+**完整消息格式规范：**
+
+| 字段 | 大小（字节） | 类型 | 描述 |
+|------|-------------|------|------|
+| totalSize | 4 | Int32 | 消息总大小（不含自己的4字节） |
+| magicCode | 4 | Int32 | 魔数，固定值：0xAABBCCDD |
+| bodyCRC | 4 | Int32 | 消息体的CRC32校验和 |
+| queueId | 4 | Int32 | 队列ID |
+| flag | 4 | Int32 | 消息标志位 |
+| sysFlag | 4 | Int32 | 系统标志位 |
+| queueOffset | 8 | Int64 | 队列偏移量（逻辑offset） |
+| bodySize | 4 | Int32 | 消息体大小 |
+| body | N | ByteArray | 消息体内容 |
+| propertiesSize | 2 | Int16 | 属性大小 |
+| properties | N | ByteArray | 属性（UTF-8编码的Key=Value格式） |
+
+**总计：** 固定头部 40 字节 + bodySize + propertiesSize
+
+**Properties格式：**
+```
+key1=value1;key2=value2;...
+```
+
+例如：
+```
+TAGS=TagA;KEYS=Order123;WAIT=true
+```
+
+**编码示例：**
+
+```kotlin
+private fun encodeMessage(message: MessageExt): ByteBuffer {
+    val bodySize = message.body.size
+    val propertiesBytes = message.properties?.toByteArray(Charsets.UTF_8) ?: ByteArray(0)
+    val propertiesSize = propertiesBytes.size
+
+    val totalSize = 40 + bodySize + 2 + propertiesSize
+
+    val buffer = ByteBuffer.allocate(totalSize + 4)  // +4 for totalSize field
+
+    // 写入固定头部（40字节）
+    buffer.putInt(totalSize)
+    buffer.putInt(MESSAGE_MAGIC_CODE)  // 0xAABBCCDD
+    buffer.putInt(calculateCRC32(message.body))
+    buffer.putInt(message.queueId)
+    buffer.putInt(message.flag)
+    buffer.putInt(message.sysFlag)
+    buffer.putLong(message.queueOffset)
+
+    // 写入消息体
+    buffer.putInt(bodySize)
+    buffer.put(message.body)
+
+    // 写入属性
+    buffer.putShort(propertiesSize.toShort())
+    if (propertiesSize > 0) {
+        buffer.put(propertiesBytes)
+    }
+
+    buffer.flip()
+    return buffer
+}
+```
+
+**解码示例：**
+
+```kotlin
+private fun decodeMessage(buffer: ByteBuffer): MessageExt? {
+    val startOffset = buffer.position()
+
+    // 读取固定头部
+    val totalSize = buffer.int
+    val magicCode = buffer.int
+
+    if (magicCode != MESSAGE_MAGIC_CODE) {
+        log.error("Invalid magicCode: 0x${magicCode.toString(16)}, expected: 0x${MESSAGE_MAGIC_CODE.toString(16)}")
+        return null
+    }
+
+    val message = MessageExt()
+
+    message.bodyCRC = buffer.int
+    message.queueId = buffer.int
+    message.flag = buffer.int
+    message.sysFlag = buffer.int
+    message.queueOffset = buffer.long
+
+    // 读取消息体
+    val bodySize = buffer.int
+    if (bodySize > 0) {
+        message.body = ByteArray(bodySize)
+        buffer.get(message.body)
+    }
+
+    // 读取属性
+    val propertiesSize = buffer.short.toInt()
+    if (propertiesSize > 0) {
+        val propertiesBytes = ByteArray(propertiesSize)
+        buffer.get(propertiesBytes)
+        message.properties = String(propertiesBytes, Charsets.UTF_8)
+    }
+
+    // 验证CRC（可选）
+    if (message.bodyCRC != 0) {
+        val calculatedCRC = calculateCRC32(message.body)
+        if (calculatedCRC != message.bodyCRC) {
+            log.warn("CRC mismatch: expected=${message.bodyCRC}, actual=$calculatedCRC")
+        }
+    }
+
+    return message
+}
+```
+
+**CRC32计算：**
+
+```kotlin
+private fun calculateCRC32(data: ByteArray): Int {
+    val crc32 = java.util.zip.CRC32()
+    crc32.update(data)
+    return crc32.value.toInt()
+}
 ```
 
 ### CommitLogActor - 消息顺序写日志
@@ -1319,6 +1460,492 @@ data class ClientConfig(
 | 消息可靠性 | 99.99% |
 | 内存占用 | < 4GB |
 | CPU利用率 | < 80% |
+
+### D. 关键技术点
+
+**1. Netty与协程的桥接**
+
+现有remoting层基于Netty线程模型，需要桥接到协程：
+
+```kotlin
+/**
+ * 协程Processor适配器
+ *
+ * 将Netty的线程模型桥接到协程世界
+ */
+class CoroutineProcessorAdapter(
+    private val dispatcherActor: RequestDispatcherActor,
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+) : NettyRequestProcessor {
+
+    override fun processRequest(
+        ctx: ChannelHandlerContext,
+        request: RemotingCommand
+    ): RemotingCommand {
+        // 使用runBlocking桥接（简化实现）
+        // 注意：这会阻塞Netty线程，生产环境应考虑更高效的桥接方式
+        return runBlocking {
+            val deferred = CompletableDeferred<RemotingCommand>()
+
+            dispatcherActor.dispatch(
+                DispatchRequest(
+                    code = request.code,
+                    channel = ctx.channel(),
+                    request = request,
+                    responseDeferred = deferred
+                )
+            )
+
+            // 带超时等待
+            withTimeoutOrNull(30_000) {
+                deferred.await()
+            } ?: buildTimeoutResponse(request)
+        }
+    }
+}
+```
+
+**优化方案（生产环境）：**
+
+使用回调方式避免阻塞Netty线程：
+
+```kotlin
+class AsyncCoroutineProcessorAdapter(
+    private val dispatcherActor: RequestDispatcherActor
+) : NettyRequestProcessor {
+
+    override fun processRequest(
+        ctx: ChannelHandlerContext,
+        request: RemotingCommand
+    ): RemotingCommand {
+        // 立即返回，不阻塞
+        CoroutineScope(Dispatchers.Default).launch {
+            try {
+                val deferred = CompletableDeferred<RemotingCommand>()
+                dispatcherActor.dispatch(DispatchRequest(..., deferred))
+
+                val response = deferred.await()
+                ctx.writeAndFlush(response)
+            } catch (e: Exception) {
+                ctx.writeAndFlush(buildErrorResponse(e))
+            }
+        }
+
+        // 返回null表示异步响应
+        return null!!
+    }
+}
+```
+
+**2. MappedFile线程安全性**
+
+**问题：** `MappedByteBuffer`不是线程安全的，多个协程并发写入会导致数据损坏。
+
+**解决方案：** CommitLogActor串行化所有写入
+
+```kotlin
+class CommitLogActor {
+    // 请求Channel
+    private val requestChannel = Channel<AppendRequest>(Channel.UNLIMITED)
+
+    // 处理协程（单个协程，串行处理）
+    private var processJob: Job? = null
+
+    fun start() {
+        // 只启动一个处理协程
+        processJob = CoroutineScope(Dispatchers.IO).launch {
+            for (request in requestChannel) {
+                // 串行处理，MappedFile.write不会并发
+                val mappedFile = getOrCreateMappedFile()
+                val result = mappedFile.appendMessage(request.message)
+                request.deferred.complete(result)
+            }
+        }
+    }
+}
+```
+
+**关键保证：**
+- ✅ 只有CommitLogActor的一个协程访问MappedFile
+- ✅ Channel确保请求串行化
+- ✅ 无需锁，性能最优
+
+**3. ConsumeQueue构建时序**
+
+**问题：** 异步构建ConsumeQueue可能导致消息刚写入CommitLog但ConsumeQueue还未构建，消费者拉取不到。
+
+**解决方案：** 同步构建ConsumeQueue，但在单独的协程中执行（不阻塞发送响应）
+
+```kotlin
+class MessageStoreActor {
+    suspend fun putMessage(message: MessageExt): PutMessageResult {
+        // 1. 写入CommitLog
+        val commitLogResult = commitLog.appendMessage(message)
+
+        if (commitLogResult.status != AppendMessageStatus.PUT_OK) {
+            return PutMessageResult(commitLogResult.status)
+        }
+
+        // 2. 同步构建ConsumeQueue（但使用单独协程池，不阻塞发送）
+        withContext(Dispatchers.IO) {
+            consumeQueueBuilder.buildConsumeQueue(
+                topic = message.topic,
+                queueId = message.queueId,
+                phyOffset = commitLogResult.wroteOffset,
+                size = commitLogResult.wroteBytes
+            )
+        }
+
+        // 3. 返回结果（此时ConsumeQueue已构建完成）
+        return PutMessageResult(PutMessageStatus.PUT_OK, commitLogResult.wroteOffset)
+    }
+}
+```
+
+**保证：**
+- ✅ `putMessage()`返回时，ConsumeQueue已构建
+- ✅ 使用`Dispatchers.IO`不阻塞发送协程
+- ✅ 消费者能立即拉取到消息
+
+**4. 消费者发现机制**
+
+**消费者注册：**
+
+```kotlin
+class ConsumerManagerActor {
+    // 消费者组表
+    private val consumerGroupTable = ConcurrentHashMap<String, ConsumerGroupInfo>()
+
+    // 注册消费者（通过HEART_BEAT请求）
+    suspend fun registerConsumer(
+        group: String,
+        clientId: String,
+        channel: io.netty.channel.Channel  // 明确使用Netty Channel
+    ) {
+        val groupInfo = consumerGroupTable.getOrPut(group) {
+            ConsumerGroupInfo(group)
+        }
+
+        groupInfo.addClient(clientId, channel)
+        channelGroupTable[channel] = group
+    }
+}
+```
+
+**消费者发现（Rebalance使用）：**
+
+```kotlin
+// Processor处理GetConsumerListByGroup请求
+class GetConsumerListProcessor(
+    private val consumerManager: ConsumerManagerActor
+) : ActorProcessor {
+
+    override suspend fun process(request: DispatchRequest): RemotingCommand {
+        val header = parseHeader<GetConsumerListRequestHeader>(request)
+
+        // 查询消费者列表
+        val groupInfo = consumerManager.getConsumerGroup(header.consumerGroup)
+        val consumerList = groupInfo?.getAllClients() ?: emptyList()
+
+        // 返回响应
+        val body = ConsumerList(consumerList).encode()
+        return RemotingCommand.createResponseCommand(ResponseCode.SUCCESS)
+            .setBody(body)
+    }
+}
+```
+
+**5. OffsetStore设计**
+
+```kotlin
+/**
+ * Offset存储接口
+ */
+interface OffsetStore {
+    /**
+     * 获取offset
+     */
+    suspend fun getOffset(group: String, mq: MessageQueue): Long
+
+    /**
+     * 更新offset
+     */
+    suspend fun updateOffset(group: String, mq: MessageQueue, offset: Long)
+
+    /**
+     * 持久化所有offset
+     */
+    suspend fun persistAll()
+
+    /**
+     * 加载offset
+     */
+    suspend fun load()
+}
+
+/**
+ * 本地Offset存储（存储在客户端本地文件）
+ */
+class LocalOffsetStore(
+    private val storePath: String
+) : OffsetStore {
+
+    private val offsetTable = ConcurrentHashMap<String, Long>()
+
+    override suspend fun getOffset(group: String, mq: MessageQueue): Long {
+        val key = "$group@${mq.topic}-${mq.queueId}"
+        return offsetTable[key] ?: 0L
+    }
+
+    override suspend fun updateOffset(group: String, mq: MessageQueue, offset: Long) {
+        val key = "$group@${mq.topic}-${mq.queueId}"
+        offsetTable[key] = offset
+    }
+
+    override suspend fun persistAll() = withContext(Dispatchers.IO) {
+        val file = File(storePath, "offsets.json")
+        file.writeText(Json.encodeToString(offsetTable))
+    }
+
+    override suspend fun load() = withContext(Dispatchers.IO) {
+        val file = File(storePath, "offsets.json")
+        if (file.exists()) {
+            offsetTable.putAll(Json.decodeFromString(file.readText()))
+        }
+    }
+}
+
+/**
+ * 远程Offset存储（存储在Broker）
+ */
+class RemoteOffsetStore(
+    private val brokerClient: BrokerClient
+) : OffsetStore {
+
+    override suspend fun getOffset(group: String, mq: MessageQueue): Long {
+        val request = QueryConsumerOffsetRequest(group, mq.topic, mq.queueId)
+        val response = brokerClient.queryOffset(request)
+        return response.offset
+    }
+
+    override suspend fun updateOffset(group: String, mq: MessageQueue, offset: Long) {
+        // 立即更新到Broker
+        val request = UpdateConsumerOffsetRequest(group, mq.topic, mq.queueId, offset)
+        brokerClient.updateOffset(request)
+    }
+
+    override suspend fun persistAll() {
+        // 远程模式无需持久化（已实时更新）
+    }
+
+    override suspend fun load() {
+        // 远程模式无需加载
+    }
+}
+```
+
+**6. 错误处理策略**
+
+```kotlin
+/**
+ * 存储错误类型
+ */
+sealed class StoreError : Exception() {
+    data class DiskFull(override val message: String = "Disk full") : StoreError()
+    data class FileCorrupted(override val message: String = "File corrupted") : StoreError()
+    data class WriteFailed(override val cause: Throwable) : StoreError()
+}
+
+/**
+ * Actor错误处理模式
+ */
+class MessageStoreActor {
+
+    private suspend fun handleMessage(request: StoreRequest) {
+        try {
+            val result = commitLog.appendMessage(request.message)
+
+            when (result.status) {
+                AppendMessageStatus.PUT_OK -> {
+                    // 成功
+                    request.deferred.complete(Result.success(result))
+                }
+                AppendMessageStatus.END_OF_FILE -> {
+                    // 创建新文件重试
+                    createNewMappedFile()
+                    val retryResult = commitLog.appendMessage(request.message)
+                    request.deferred.complete(Result.success(retryResult))
+                }
+                AppendMessageStatus.MESSAGE_ILLEGAL -> {
+                    // 消息非法
+                    request.deferred.complete(
+                        Result.failure(StoreError.WriteFailed(IllegalArgumentException()))
+                    )
+                }
+            }
+        } catch (e: IOException) {
+            // IO异常
+            log.error("Store message failed", e)
+            request.deferred.complete(Result.failure(StoreError.WriteFailed(e)))
+
+            // 告警
+            alertMonitoring("StorageError", e)
+        } catch (e: Exception) {
+            // 未知异常
+            log.error("Unexpected error", e)
+            request.deferred.complete(Result.failure(StoreError.WriteFailed(e)))
+        }
+    }
+}
+```
+
+**7. NameServerClient设计**
+
+```kotlin
+/**
+ * NameServer客户端
+ */
+class NameServerClient(
+    private val nameServerAddresses: List<String>,
+    private val nettyClient: NettyRemotingClient
+) {
+    // 路由缓存
+    private val routeCache = ConcurrentHashMap<String, TopicRouteData>()
+
+    // 缓存过期时间
+    private val cacheExpireTime = 30_000L  // 30秒
+
+    /**
+     * 获取Topic路由信息
+     */
+    suspend fun getRouteInfoByTopic(topic: String): TopicRouteData? {
+        // 1. 检查缓存
+        val cached = routeCache[topic]
+        if (cached != null && !isExpired(cached)) {
+            return cached
+        }
+
+        // 2. 从NameServer查询
+        val request = RemotingCommand.createRequestCommand(
+            RequestCode.GET_ROUTEINFO_BY_TOPIC,
+            GetRouteInfoRequestHeader(topic)
+        )
+
+        for (namesrvAddr in nameServerAddresses) {
+            try {
+                val channel = nettyClient.getOrCreateChannel(namesrvAddr)
+                val response = nettyClient.invokeSync(channel, request, 3000)
+
+                if (response.code == ResponseCode.SUCCESS) {
+                    val routeData = TopicRouteData.decode(response.body)
+                    routeCache[topic] = routeData
+                    return routeData
+                }
+            } catch (e: Exception) {
+                log.warn("Query NameServer {} failed", namesrvAddr, e)
+            }
+        }
+
+        return null
+    }
+
+    /**
+     * 获取所有Topic列表
+     */
+    suspend fun getAllTopicList(): List<String> {
+        val request = RemotingCommand.createRequestCommand(
+            RequestCode.GET_ALL_TOPIC_LIST_FROM_NAMESERVER,
+            null
+        )
+
+        for (namesrvAddr in nameServerAddresses) {
+            try {
+                val channel = nettyClient.getOrCreateChannel(namesrvAddr)
+                val response = nettyClient.invokeSync(channel, request, 3000)
+
+                if (response.code == ResponseCode.SUCCESS) {
+                    val topicList = TopicList.decode(response.body)
+                    return topicList.topicList
+                }
+            } catch (e: Exception) {
+                log.warn("Query NameServer {} failed", namesrvAddr, e)
+            }
+        }
+
+        return emptyList()
+    }
+
+    private fun isExpired(routeData: TopicRouteData): Boolean {
+        // 检查缓存是否过期
+        return System.currentTimeMillis() - routeData.timestamp > cacheExpireTime
+    }
+}
+```
+
+**8. 协议兼容性**
+
+**最小必需RequestCode：**
+
+| RequestCode | 值 | 说明 | 优先级 |
+|------------|----|----|--------|
+| SEND_MESSAGE | 10 | 发送消息 | P0 |
+| SEND_MESSAGE_V2 | 310 | 发送消息V2 | P0 |
+| SEND_BATCH_MESSAGE | 320 | 批量发送 | P1 |
+| PULL_MESSAGE | 11 | 拉取消息 | P0 |
+| HEART_BEAT | 34 | 心跳（消费者注册） | P0 |
+| UNREGISTER_CLIENT | 35 | 客户端注销 | P1 |
+| UPDATE_CONSUMER_OFFSET | 15 | 更新offset | P0 |
+| QUERY_CONSUMER_OFFSET | 14 | 查询offset | P0 |
+| GET_MIN_OFFSET | 31 | 获取最小offset | P1 |
+| GET_MAX_OFFSET | 30 | 获取最大offset | P1 |
+| UPDATE_AND_CREATE_TOPIC | 17 | 创建Topic | P1 |
+| GET_ALL_TOPIC_LIST_FROM_NAMESERVER | 206 | 获取Topic列表 | P1 |
+| GET_ROUTEINFO_BY_TOPIC | 105 | 获取路由信息 | P0 |
+| GET_CONSUMER_LIST_BY_GROUP | 38 | 获取消费者列表（Rebalance） | P0 |
+
+**实现优先级：**
+- **P0** - 核心功能，必须实现
+- **P1** - 重要功能，第一版应实现
+- **P2** - 可选功能，后续迭代
+
+**9. 测试改进**
+
+**修复GlobalScope问题：**
+
+```kotlin
+@Test
+fun `test message store throughput`() = runBlocking {
+    val testScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
+    val jobs = (1..messageCount).map { i ->
+        testScope.async(Dispatchers.IO) {  // 使用testScope
+            val msg = createTestMessage(i)
+            store.putMessage(msg)
+        }
+    }
+
+    jobs.awaitAll()
+    testScope.cancel()  // 清理
+}
+```
+
+**修复固定延迟问题：**
+
+```kotlin
+@Test
+fun `test send and consume message`() = runBlocking {
+    // ... 发送消息 ...
+
+    // 使用异步断言，而非固定延迟
+    withTimeout(5000) {
+        while (receivedMessage == null) {
+            delay(100)
+        }
+    }
+
+    assertNotNull(receivedMessage)
+}
+```
 
 ### D. 关键技术点
 
