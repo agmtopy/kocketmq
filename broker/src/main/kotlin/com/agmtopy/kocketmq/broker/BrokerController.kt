@@ -2,8 +2,12 @@ package com.agmtopy.kocketmq.broker
 
 import com.agmtopy.kocketmq.broker.config.BrokerConfig
 import com.agmtopy.kocketmq.broker.offset.ConsumerOffsetManager
+import com.agmtopy.kocketmq.broker.processor.AdminBrokerProcessor
+import com.agmtopy.kocketmq.broker.processor.BatchSendMessageProcessor
 import com.agmtopy.kocketmq.broker.processor.PullMessageProcessor
+import com.agmtopy.kocketmq.broker.processor.QueryMessageProcessor
 import com.agmtopy.kocketmq.broker.processor.SendMessageProcessor
+import com.agmtopy.kocketmq.broker.stats.BrokerStats
 import com.agmtopy.kocketmq.broker.store.MessageStoreActor
 import com.agmtopy.kocketmq.broker.topic.TopicConfigManager
 import com.agmtopy.kocketmq.common.constant.RequestCode
@@ -54,6 +58,11 @@ class BrokerController(
      * 消费者offset管理器
      */
     val consumerOffsetManager: ConsumerOffsetManager = ConsumerOffsetManager(brokerConfig)
+
+    /**
+     * Broker统计信息
+     */
+    val brokerStats: BrokerStats = BrokerStats()
 
     // ==================== 状态管理 ====================
 
@@ -148,13 +157,30 @@ class BrokerController(
         val sendMessageProcessor = SendMessageProcessor(this)
         remotingServer.registerProcessor(RequestCode.SEND_MESSAGE, sendMessageProcessor, null)
         remotingServer.registerProcessor(RequestCode.SEND_MESSAGE_V2, sendMessageProcessor, null)
-        remotingServer.registerProcessor(RequestCode.SEND_BATCH_MESSAGE, sendMessageProcessor, null)
+
+        // 批量发送消息处理器
+        val batchSendMessageProcessor = BatchSendMessageProcessor(this)
+        remotingServer.registerProcessor(RequestCode.SEND_BATCH_MESSAGE, batchSendMessageProcessor, null)
 
         // 拉取消息处理器
         val pullMessageProcessor = PullMessageProcessor(this)
         remotingServer.registerProcessor(RequestCode.PULL_MESSAGE, pullMessageProcessor, null)
 
-        log.info("Request processors registered")
+        // 管理命令处理器
+        val adminBrokerProcessor = AdminBrokerProcessor(this)
+        remotingServer.registerProcessor(RequestCode.UPDATE_AND_CREATE_TOPIC, adminBrokerProcessor, null)
+        remotingServer.registerProcessor(RequestCode.GET_ALL_TOPIC_CONFIG, adminBrokerProcessor, null)
+        remotingServer.registerProcessor(RequestCode.GET_BROKER_CONFIG, adminBrokerProcessor, null)
+        remotingServer.registerProcessor(RequestCode.GET_BROKER_RUNTIME_INFO, adminBrokerProcessor, null)
+        remotingServer.registerProcessor(RequestCode.GET_MIN_OFFSET, adminBrokerProcessor, null)
+        remotingServer.registerProcessor(RequestCode.GET_MAX_OFFSET, adminBrokerProcessor, null)
+
+        // 消息查询处理器
+        val queryMessageProcessor = QueryMessageProcessor(this)
+        remotingServer.registerProcessor(RequestCode.QUERY_MESSAGE, queryMessageProcessor, null)
+        remotingServer.registerProcessor(RequestCode.VIEW_MESSAGE_BY_ID, queryMessageProcessor, null)
+
+        log.info("请求处理器已注册")
     }
 
     /**
