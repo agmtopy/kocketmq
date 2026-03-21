@@ -45,8 +45,9 @@ compileTestKotlin {
 test {
     useJUnitPlatform()
 
-    // 并行测试执行
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    // 注意：禁用并行测试，因为多个测试需要绑定同一端口
+    // 这些测试使用了固定的端口号（如10911），并行会导致端口冲突
+    maxParallelForks = 1
 
     // 失败不停止，继续执行
     failFast = false
