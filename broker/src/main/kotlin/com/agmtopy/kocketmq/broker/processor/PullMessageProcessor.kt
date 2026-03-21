@@ -1,12 +1,12 @@
 package com.agmtopy.kocketmq.broker.processor
 
 import com.agmtopy.kocketmq.broker.BrokerController
-import com.agmtopy.kocketmq.common.constant.RequestCode
 import com.agmtopy.kocketmq.logging.InternalLogger
 import com.agmtopy.kocketmq.logging.inner.InternalLoggerFactory
 import com.agmtopy.kocketmq.remoting.RemotingCommand
 import com.agmtopy.kocketmq.remoting.annotation.CFNotNull
 import com.agmtopy.kocketmq.remoting.netty.NettyRequestProcessor
+import com.agmtopy.kocketmq.remoting.protocol.RemotingSysResponseCode
 import com.agmtopy.kocketmq.remoting.protocol.ResponseCode
 import io.netty.channel.ChannelHandlerContext
 import kotlinx.coroutines.runBlocking
@@ -24,14 +24,17 @@ class PullMessageProcessor(
         private val log: InternalLogger = InternalLoggerFactory.getLogger(PullMessageProcessor::class.java)
     }
 
-    override fun processRequest(ctx: ChannelHandlerContext, request: RemotingCommand): RemotingCommand {
+    override fun processRequest(ctx: ChannelHandlerContext?, request: RemotingCommand?): RemotingCommand? {
+        if (ctx == null || request == null) {
+            return RemotingCommand.createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "参数为空")
+        }
         return try {
             // 1. 解码请求头
             val requestHeader = decodePullMessageRequestHeader(request)
 
             if (requestHeader == null) {
                 return RemotingCommand.createResponseCommand(
-                    ResponseCode.SYSTEM_ERROR,
+                    RemotingSysResponseCode.SYSTEM_ERROR,
                     "Decode request header failed"
                 )
             }
@@ -64,19 +67,20 @@ class PullMessageProcessor(
                 maxOffset = runBlocking { brokerController.messageStore.getMaxOffset() }
             )
 
-            val response = RemotingCommand.createResponseCommand(ResponseCode.SUCCESS, "OK")
-            response.setExtFields(responseHeader.toMap())
+            val response = RemotingCommand.createResponseCommand(RemotingSysResponseCode.SUCCESS, "OK")
+            response?.setExtFields(responseHeader.toMap())
 
             // TODO: 序列化消息到响应body
-            // response.body = serializeMessages(messages)
 
             response
 
         } catch (e: Exception) {
             log.error("Process pull message failed", e)
-            RemotingCommand.createResponseCommand(ResponseCode.SYSTEM_ERROR, "Process failed: ${e.message}")
+            RemotingCommand.createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "Process failed: ${e.message}")
         }
     }
+
+    override fun rejectRequest(): Boolean = false
 
     /**
      * 解码拉取消息请求头

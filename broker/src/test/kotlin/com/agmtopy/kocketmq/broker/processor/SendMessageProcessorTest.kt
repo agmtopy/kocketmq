@@ -4,7 +4,7 @@ import com.agmtopy.kocketmq.broker.BrokerController
 import com.agmtopy.kocketmq.broker.config.BrokerConfig
 import com.agmtopy.kocketmq.common.constant.RequestCode
 import com.agmtopy.kocketmq.remoting.RemotingCommand
-import com.agmtopy.kocketmq.remoting.protocol.ResponseCode
+import com.agmtopy.kocketmq.remoting.protocol.RemotingSysResponseCode
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -51,80 +51,80 @@ class SendMessageProcessorTest {
     fun `test send message success`() {
         // 构建请求
         val request = RemotingCommand.createRequestCommand(RequestCode.SEND_MESSAGE, null)
-        request.extFields = mapOf(
+        request.extFields = hashMapOf(
             "topic" to "TestTopic",
             "queueId" to "0",
             "sysFlag" to "0",
             "bornTimestamp" to System.currentTimeMillis().toString(),
             "flag" to "0"
         )
-        request.body = "Hello, KocketMQ!".toByteArray()
+        request.setBody("Hello, KocketMQ!".toByteArray()
 
         // 处理请求
         val response = sendMessageProcessor.processRequest(null, request)
 
         // 验证响应
-        assertEquals(ResponseCode.SUCCESS, response.code)
-        assertNotNull(response.extFields)
-        assertTrue(response.extFields!!.containsKey("msgId"))
-        assertTrue(response.extFields!!.containsKey("queueId"))
-        assertTrue(response.extFields!!.containsKey("queueOffset"))
+        assertEquals(RemotingSysResponseCode.SUCCESS, response!!.code)
+        assertNotNull(response!!.extFields)
+        assertTrue(response!!.extFields!!.containsKey("msgId"))
+        assertTrue(response!!.extFields!!.containsKey("queueId"))
+        assertTrue(response!!.extFields!!.containsKey("queueOffset"))
     }
 
     @Test
     fun `test send message to auto created topic`() {
         val request = RemotingCommand.createRequestCommand(RequestCode.SEND_MESSAGE, null)
-        request.extFields = mapOf(
+        request.extFields = hashMapOf(
             "topic" to "AutoCreatedTopic",
             "queueId" to "0"
         )
-        request.body = "Test message".toByteArray()
+        request.setBody("Test message".toByteArray()
 
         val response = sendMessageProcessor.processRequest(null, request)
 
         // 应该自动创建Topic并成功
-        assertEquals(ResponseCode.SUCCESS, response.code)
+        assertEquals(RemotingSysResponseCode.SUCCESS, response!!.code)
         assertNotNull(brokerController.topicConfigManager.getTopicConfig("AutoCreatedTopic"))
     }
 
     @Test
     fun `test send message without topic`() {
         val request = RemotingCommand.createRequestCommand(RequestCode.SEND_MESSAGE, null)
-        request.extFields = mapOf(
+        request.extFields = hashMapOf(
             "queueId" to "0"
         )
-        request.body = "Test message".toByteArray()
+        request.setBody("Test message".toByteArray()
 
         val response = sendMessageProcessor.processRequest(null, request)
 
         // 应该失败
-        assertEquals(ResponseCode.SYSTEM_ERROR, response.code)
+        assertEquals(RemotingSysResponseCode.SYSTEM_ERROR, response!!.code)
     }
 
     @Test
     fun `test send message v2`() {
         val request = RemotingCommand.createRequestCommand(RequestCode.SEND_MESSAGE_V2, null)
-        request.extFields = mapOf(
+        request.extFields = hashMapOf(
             "topic" to "TestTopicV2",
             "queueId" to "0"
         )
-        request.body = "V2 message".toByteArray()
+        request.setBody("V2 message".toByteArray()
 
         val response = sendMessageProcessor.processRequest(null, request)
 
-        assertEquals(ResponseCode.SUCCESS, response.code)
+        assertEquals(RemotingSysResponseCode.SUCCESS, response!!.code)
     }
 
     @Test
     fun `test send batch message not supported`() {
         val request = RemotingCommand.createRequestCommand(RequestCode.SEND_BATCH_MESSAGE, null)
-        request.extFields = mapOf(
+        request.extFields = hashMapOf(
             "topic" to "TestTopic",
             "queueId" to "0"
         )
 
         val response = sendMessageProcessor.processRequest(null, request)
 
-        assertEquals(ResponseCode.REQUEST_CODE_NOT_SUPPORTED, response.code)
+        assertEquals(RemotingSysResponseCode.REQUEST_CODE_NOT_SUPPORTED, response!!.code)
     }
 }

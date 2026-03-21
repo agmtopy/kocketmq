@@ -4,7 +4,7 @@ import com.agmtopy.kocketmq.broker.BrokerController
 import com.agmtopy.kocketmq.broker.config.BrokerConfig
 import com.agmtopy.kocketmq.common.constant.RequestCode
 import com.agmtopy.kocketmq.remoting.RemotingCommand
-import com.agmtopy.kocketmq.remoting.protocol.ResponseCode
+import com.agmtopy.kocketmq.remoting.protocol.RemotingSysResponseCode
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -49,7 +49,7 @@ class AdminBrokerProcessorTest {
     @Test
     fun `测试创建Topic`() {
         val request = RemotingCommand.createRequestCommand(RequestCode.UPDATE_AND_CREATE_TOPIC, null)
-        request.extFields = mapOf(
+        request.extFields = hashMapOf(
             "topicName" to "TestTopic",
             "readQueueNums" to "4",
             "writeQueueNums" to "4",
@@ -58,7 +58,7 @@ class AdminBrokerProcessorTest {
 
         val response = adminBrokerProcessor.processRequest(null, request)
 
-        assertEquals(ResponseCode.SUCCESS, response.code)
+        assertEquals(RemotingSysResponseCode.SUCCESS, response!!.code)
         assertNotNull(brokerController.topicConfigManager.getTopicConfig("TestTopic"))
     }
 
@@ -72,8 +72,8 @@ class AdminBrokerProcessorTest {
         val request = RemotingCommand.createRequestCommand(RequestCode.GET_ALL_TOPIC_CONFIG, null)
         val response = adminBrokerProcessor.processRequest(null, request)
 
-        assertEquals(ResponseCode.SUCCESS, response.code)
-        assertNotNull(response.body)
+        assertEquals(RemotingSysResponseCode.SUCCESS, response!!.code)
+        assertNotNull(response!!.getBody())
     }
 
     @Test
@@ -81,9 +81,9 @@ class AdminBrokerProcessorTest {
         val request = RemotingCommand.createRequestCommand(RequestCode.GET_BROKER_CONFIG, null)
         val response = adminBrokerProcessor.processRequest(null, request)
 
-        assertEquals(ResponseCode.SUCCESS, response.code)
-        assertNotNull(response.body)
-        val configStr = String(response.body!!)
+        assertEquals(RemotingSysResponseCode.SUCCESS, response!!.code)
+        assertNotNull(response!!.getBody())
+        val configStr = String(response!!.getBody()!!)
         assertTrue(configStr.contains("TestBroker"))
     }
 
@@ -92,33 +92,33 @@ class AdminBrokerProcessorTest {
         val request = RemotingCommand.createRequestCommand(RequestCode.GET_BROKER_RUNTIME_INFO, null)
         val response = adminBrokerProcessor.processRequest(null, request)
 
-        assertEquals(ResponseCode.SUCCESS, response.code)
-        assertNotNull(response.body)
-        val infoStr = String(response.body!!)
+        assertEquals(RemotingSysResponseCode.SUCCESS, response!!.code)
+        assertNotNull(response!!.getBody())
+        val infoStr = String(response!!.getBody()!!)
         assertTrue(infoStr.contains("brokerName"))
     }
 
     @Test
     fun `测试获取最小Offset`() {
         val request = RemotingCommand.createRequestCommand(RequestCode.GET_MIN_OFFSET, null)
-        request.extFields = mapOf("topic" to "TestTopic")
+        request.extFields = hashMapOf("topic" to "TestTopic")
 
         val response = adminBrokerProcessor.processRequest(null, request)
 
-        assertEquals(ResponseCode.SUCCESS, response.code)
-        assertNotNull(response.extFields)
-        assertTrue(response.extFields!!.containsKey("offset"))
+        assertEquals(RemotingSysResponseCode.SUCCESS, response!!.code)
+        assertNotNull(response!!.extFields)
+        assertTrue(response!!.extFields!!.containsKey("offset"))
     }
 
     @Test
     fun `测试获取最大Offset`() {
         val request = RemotingCommand.createRequestCommand(RequestCode.GET_MAX_OFFSET, null)
-        request.extFields = mapOf("topic" to "TestTopic")
+        request.extFields = hashMapOf("topic" to "TestTopic")
 
         val response = adminBrokerProcessor.processRequest(null, request)
 
-        assertEquals(ResponseCode.SUCCESS, response.code)
-        assertNotNull(response.extFields)
-        assertTrue(response.extFields!!.containsKey("offset"))
+        assertEquals(RemotingSysResponseCode.SUCCESS, response!!.code)
+        assertNotNull(response!!.extFields)
+        assertTrue(response!!.extFields!!.containsKey("offset"))
     }
 }

@@ -36,8 +36,8 @@ class MappedFileTest {
         mappedFile = MappedFile(fileName, 1024)
 
         assertTrue(File(fileName).exists())
-        assertEquals(1024, mappedFile.getFileSize())
-        assertEquals(0L, mappedFile.getFileFromOffset())
+        assertEquals(1024, mappedFile.fileSize)
+        assertEquals(0L, mappedFile.fileFromOffset)
         assertFalse(mappedFile.isFull())
     }
 
@@ -47,7 +47,7 @@ class MappedFileTest {
         mappedFile = MappedFile(fileName, 1024)
 
         // 写入消息
-        val data = ByteBuffer.wrap("Hello, KocketMQ!".toByteArray())
+        val data = ByteBuffer.wrap("Hello, KocketMQ!".toByteArray()
         val result = mappedFile.appendMessage(data)
 
         assertEquals(AppendMessageStatus.PUT_OK, result.status)
@@ -70,7 +70,7 @@ class MappedFileTest {
 
         // 写入多条消息
         for (i in 1..10) {
-            val data = ByteBuffer.wrap("Message $i".toByteArray())
+            val data = ByteBuffer.wrap("Message $i".toByteArray()
             val result = mappedFile.appendMessage(data)
 
             assertEquals(AppendMessageStatus.PUT_OK, result.status)
@@ -86,7 +86,7 @@ class MappedFileTest {
         mappedFile = MappedFile(fileName, fileSize)
 
         // 写入数据直到文件满
-        val data = ByteBuffer.wrap("A".repeat(80).toByteArray())
+        val data = ByteBuffer.wrap("A".repeat(80).toByteArray()
         val result1 = mappedFile.appendMessage(data)
         assertEquals(AppendMessageStatus.PUT_OK, result1.status)
         assertFalse(mappedFile.isFull())
@@ -103,7 +103,7 @@ class MappedFileTest {
         mappedFile = MappedFile(fileName, 1024)
 
         // 写入数据
-        val data = ByteBuffer.wrap("Test flush".toByteArray())
+        val data = ByteBuffer.wrap("Test flush".toByteArray()
         mappedFile.appendMessage(data)
 
         // 刷盘
@@ -130,6 +130,6 @@ class MappedFileTest {
         val fileName = "$testDir/100.data"
         mappedFile = MappedFile(fileName, 1024)
 
-        assertEquals(100L, mappedFile.getFileFromOffset())
+        assertEquals(100L, mappedFile.fileFromOffset)
     }
 }

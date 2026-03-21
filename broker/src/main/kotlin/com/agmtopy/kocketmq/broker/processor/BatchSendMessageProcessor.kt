@@ -8,6 +8,7 @@ import com.agmtopy.kocketmq.logging.InternalLogger
 import com.agmtopy.kocketmq.logging.inner.InternalLoggerFactory
 import com.agmtopy.kocketmq.remoting.RemotingCommand
 import com.agmtopy.kocketmq.remoting.netty.NettyRequestProcessor
+import com.agmtopy.kocketmq.remoting.protocol.RemotingSysResponseCode
 import com.agmtopy.kocketmq.remoting.protocol.ResponseCode
 import io.netty.channel.ChannelHandlerContext
 import kotlinx.coroutines.runBlocking
@@ -28,20 +29,25 @@ class BatchSendMessageProcessor(
         private val log: InternalLogger = InternalLoggerFactory.getLogger(BatchSendMessageProcessor::class.java)
     }
 
-    override fun processRequest(ctx: ChannelHandlerContext, request: RemotingCommand): RemotingCommand {
+    override fun processRequest(ctx: ChannelHandlerContext?, request: RemotingCommand?): RemotingCommand? {
+        if (ctx == null || request == null) {
+            return RemotingCommand.createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "参数为空")
+        }
         return when (request.code) {
             RequestCode.SEND_BATCH_MESSAGE -> processBatchSendMessage(request)
             else -> RemotingCommand.createResponseCommand(
-                ResponseCode.REQUEST_CODE_NOT_SUPPORTED,
+                RemotingSysResponseCode.REQUEST_CODE_NOT_SUPPORTED,
                 "不支持此请求码: ${request.code}"
             )
         }
     }
 
+    override fun rejectRequest(): Boolean = false
+
     /**
      * 处理批量发送消息
      */
-    private fun processBatchSendMessage(request: RemotingCommand): RemotingCommand {
+    private fun processBatchSendMessage(request: RemotingCommand): RemotingCommand? {
         return try {
             // 1. 解码请求
             val topic = request.extFields?.get("topic")
@@ -49,7 +55,7 @@ class BatchSendMessageProcessor(
 
             if (topic.isNullOrBlank()) {
                 return RemotingCommand.createResponseCommand(
-                    ResponseCode.SYSTEM_ERROR,
+                    RemotingSysResponseCode.SYSTEM_ERROR,
                     "Topic不能为空"
                 )
             }
@@ -65,11 +71,11 @@ class BatchSendMessageProcessor(
             }
 
             // 3. 解码批量消息
-            val messages = decodeBatchMessages(request.body, topic, queueId)
+            val messages = decodeBatchMessages(request.getBody(), topic, queueId)
 
             if (messages.isEmpty()) {
                 return RemotingCommand.createResponseCommand(
-                    ResponseCode.SYSTEM_ERROR,
+                    RemotingSysResponseCode.SYSTEM_ERROR,
                     "批量消息为空"
                 )
             }
@@ -92,12 +98,12 @@ class BatchSendMessageProcessor(
             // 5. 统计成功数量
             val successCount = results.count { it.status == PutMessageStatus.PUT_OK.name }
 
-            if (successCount == results.size) {
+            return if (successCount == results.size) {
                 // 全部成功
-                log.info("批量发送成功: topic={}, count={}", topic, successCount)
+                log.info("批量发送成功: topic=$topic, count=$successCount")
 
-                val response = RemotingCommand.createResponseCommand(ResponseCode.SUCCESS, "OK")
-                response.setExtFields(
+                val response = RemotingCommand.createResponseCommand(RemotingSysResponseCode.SUCCESS, "OK")
+                response?.setExtFields(
                     mapOf(
                         "count" to results.size.toString(),
                         "successCount" to successCount.toString()
@@ -107,13 +113,13 @@ class BatchSendMessageProcessor(
 
             } else {
                 // 部分失败
-                log.warn("批量发送部分失败: topic={}, total={}, success={}", topic, results.size, successCount)
+                log.warn("批量发送部分失败: topic=$topic, total=${results.size}, success=$successCount")
 
                 val response = RemotingCommand.createResponseCommand(
-                    ResponseCode.SYSTEM_ERROR,
+                    RemotingSysResponseCode.SYSTEM_ERROR,
                     "部分消息发送失败"
                 )
-                response.setExtFields(
+                response?.setExtFields(
                     mapOf(
                         "count" to results.size.toString(),
                         "successCount" to successCount.toString()
@@ -125,7 +131,7 @@ class BatchSendMessageProcessor(
         } catch (e: Exception) {
             log.error("批量发送消息失败", e)
             RemotingCommand.createResponseCommand(
-                ResponseCode.SYSTEM_ERROR,
+                RemotingSysResponseCode.SYSTEM_ERROR,
                 "批量发送失败: ${e.message}"
             )
         }

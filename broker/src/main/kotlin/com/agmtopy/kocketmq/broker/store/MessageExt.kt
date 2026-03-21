@@ -93,14 +93,14 @@ object MessageCodec {
         val propertiesSize = propertiesBytes.size
 
         // 计算总大小（不包括totalSize字段本身）
-        val totalSize = MESSAGE_HEADER_SIZE + bodySize + 2 + propertiesSize
+        val totalSize = MessageExt.MESSAGE_HEADER_SIZE + bodySize + 2 + propertiesSize
 
         // 分配缓冲区（+4 for totalSize field）
         val buffer = ByteBuffer.allocate(totalSize + 4)
 
         // 写入固定头部（40字节）
         buffer.putInt(totalSize)
-        buffer.putInt(MESSAGE_MAGIC_CODE)
+        buffer.putInt(MessageExt.MESSAGE_MAGIC_CODE)
         buffer.putInt(message.bodyCRC)
         buffer.putInt(message.queueId)
         buffer.putInt(message.flag)
@@ -138,7 +138,7 @@ object MessageCodec {
             val magicCode = buffer.int
 
             // 验证魔数
-            if (magicCode != MESSAGE_MAGIC_CODE) {
+            if (magicCode != MessageExt.MESSAGE_MAGIC_CODE) {
                 return null
             }
 
@@ -192,6 +192,6 @@ object MessageCodec {
     fun calTotalSize(message: MessageExt): Int {
         val bodySize = message.body.size
         val propertiesSize = message.properties?.toByteArray(Charsets.UTF_8)?.size ?: 0
-        return MESSAGE_HEADER_SIZE + bodySize + 2 + propertiesSize
+        return MessageExt.MESSAGE_HEADER_SIZE + bodySize + 2 + propertiesSize
     }
 }

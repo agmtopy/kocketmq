@@ -205,21 +205,6 @@ class MappedFile(
      */
     fun flushedPosition(): Int = flushedPosition.get()
 
-    /**
-     * 获取文件名
-     */
-    fun getFileName(): String = fileName
-
-    /**
-     * 获取文件大小
-     */
-    fun getFileSize(): Int = fileSize
-
-    /**
-     * 获取文件起始偏移量
-     */
-    fun getFileFromOffset(): Long = fileFromOffset
-
     // ==================== 资源清理 ====================
 
     /**
@@ -257,9 +242,10 @@ class MappedFile(
  * 追加消息状态
  */
 enum class AppendMessageStatus {
-    PUT_OK,         // 写入成功
-    END_OF_FILE,    // 文件已满
-    MESSAGE_ILLEGAL // 消息非法
+    PUT_OK,              // 写入成功
+    END_OF_FILE,         // 文件已满
+    MESSAGE_ILLEGAL,     // 消息非法
+    CREATE_MAPEDFILE_FAILED // 创建映射文件失败
 }
 
 /**

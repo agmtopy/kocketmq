@@ -23,7 +23,7 @@ abstract class InternalLoggerFactory {
         /**
          * 根据ClassType获取InternalLogger
          */
-        fun getLogger(clazz: Class<*>): InternalLogger? {
+        fun getLogger(clazz: Class<*>): InternalLogger {
             return getLogger(clazz.name)
         }
 

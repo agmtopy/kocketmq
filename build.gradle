@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.5.31'
+    ext.kotlin_version = '2.0.0'
 
     repositories {
         mavenCentral()
@@ -19,6 +19,23 @@ apply plugin: "kotlin"
 group 'com.agmtopy'
 version '0.0.1-SNAPSHOT'
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = '21'
+    }
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = '21'
+    }
+}
+
 allprojects{
     repositories {
         mavenCentral()
@@ -28,7 +45,7 @@ allprojects{
 dependencies {
     implementation "commons-cli:commons-cli:1.4"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0-RC"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0"
 
     testImplementation('org.junit.jupiter:junit-jupiter:5.5.2')
 }

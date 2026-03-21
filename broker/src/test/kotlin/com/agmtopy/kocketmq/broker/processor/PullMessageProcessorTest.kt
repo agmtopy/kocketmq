@@ -5,6 +5,7 @@ import com.agmtopy.kocketmq.broker.config.BrokerConfig
 import com.agmtopy.kocketmq.broker.store.MessageExt
 import com.agmtopy.kocketmq.common.constant.RequestCode
 import com.agmtopy.kocketmq.remoting.RemotingCommand
+import com.agmtopy.kocketmq.remoting.protocol.RemotingSysResponseCode
 import com.agmtopy.kocketmq.remoting.protocol.ResponseCode
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -54,16 +55,16 @@ class PullMessageProcessorTest {
     fun `test pull message success`() = runBlocking {
         // 先发送消息
         val sendRequest = RemotingCommand.createRequestCommand(RequestCode.SEND_MESSAGE, null)
-        sendRequest.extFields = mapOf(
+        sendRequest.extFields = hashMapOf(
             "topic" to "TestTopic",
             "queueId" to "0"
         )
-        sendRequest.body = "Test message".toByteArray()
+        sendRequest.setBody("Test message".toByteArray()
         sendMessageProcessor.processRequest(null, sendRequest)
 
         // 拉取消息
         val pullRequest = RemotingCommand.createRequestCommand(RequestCode.PULL_MESSAGE, null)
-        pullRequest.extFields = mapOf(
+        pullRequest.extFields = hashMapOf(
             "consumerGroup" to "TestGroup",
             "topic" to "TestTopic",
             "queueId" to "0",
@@ -74,17 +75,17 @@ class PullMessageProcessorTest {
         val response = pullMessageProcessor.processRequest(null, pullRequest)
 
         // 验证响应
-        assertEquals(ResponseCode.SUCCESS, response.code)
-        assertNotNull(response.extFields)
-        assertTrue(response.extFields!!.containsKey("nextBeginOffset"))
-        assertTrue(response.extFields!!.containsKey("minOffset"))
-        assertTrue(response.extFields!!.containsKey("maxOffset"))
+        assertEquals(RemotingSysResponseCode.SUCCESS, response!!.code)
+        assertNotNull(response!!.extFields)
+        assertTrue(response!!.extFields!!.containsKey("nextBeginOffset"))
+        assertTrue(response!!.extFields!!.containsKey("minOffset"))
+        assertTrue(response!!.extFields!!.containsKey("maxOffset"))
     }
 
     @Test
     fun `test pull message from non-existent topic`() {
         val pullRequest = RemotingCommand.createRequestCommand(RequestCode.PULL_MESSAGE, null)
-        pullRequest.extFields = mapOf(
+        pullRequest.extFields = hashMapOf(
             "consumerGroup" to "TestGroup",
             "topic" to "NonExistentTopic",
             "queueId" to "0",
@@ -94,23 +95,23 @@ class PullMessageProcessorTest {
         val response = pullMessageProcessor.processRequest(null, pullRequest)
 
         // Topic不存在应该返回错误
-        assertEquals(ResponseCode.TOPIC_NOT_EXIST, response.code)
+        assertEquals(ResponseCode.TOPIC_NOT_EXIST, response!!.code)
     }
 
     @Test
     fun `test pull message with invalid offset`() = runBlocking {
         // 先发送消息
         val sendRequest = RemotingCommand.createRequestCommand(RequestCode.SEND_MESSAGE, null)
-        sendRequest.extFields = mapOf(
+        sendRequest.extFields = hashMapOf(
             "topic" to "TestTopic",
             "queueId" to "0"
         )
-        sendRequest.body = "Test message".toByteArray()
+        sendRequest.setBody("Test message".toByteArray()
         sendMessageProcessor.processRequest(null, sendRequest)
 
         // 拉取超大offset
         val pullRequest = RemotingCommand.createRequestCommand(RequestCode.PULL_MESSAGE, null)
-        pullRequest.extFields = mapOf(
+        pullRequest.extFields = hashMapOf(
             "consumerGroup" to "TestGroup",
             "topic" to "TestTopic",
             "queueId" to "0",
@@ -121,7 +122,7 @@ class PullMessageProcessorTest {
         val response = pullMessageProcessor.processRequest(null, pullRequest)
 
         // 应该返回成功但消息为空
-        assertEquals(ResponseCode.SUCCESS, response.code)
+        assertEquals(RemotingSysResponseCode.SUCCESS, response!!.code)
     }
 
     @Test
@@ -129,17 +130,17 @@ class PullMessageProcessorTest {
         // 发送多条消息
         for (i in 1..5) {
             val sendRequest = RemotingCommand.createRequestCommand(RequestCode.SEND_MESSAGE, null)
-            sendRequest.extFields = mapOf(
+            sendRequest.extFields = hashMapOf(
                 "topic" to "TestTopic",
                 "queueId" to "0"
             )
-            sendRequest.body = "Message $i".toByteArray()
+            sendRequest.setBody("Message $i".toByteArray()
             sendMessageProcessor.processRequest(null, sendRequest)
         }
 
         // 拉取3条消息
         val pullRequest = RemotingCommand.createRequestCommand(RequestCode.PULL_MESSAGE, null)
-        pullRequest.extFields = mapOf(
+        pullRequest.extFields = hashMapOf(
             "consumerGroup" to "TestGroup",
             "topic" to "TestTopic",
             "queueId" to "0",
@@ -149,21 +150,21 @@ class PullMessageProcessorTest {
 
         val response = pullMessageProcessor.processRequest(null, pullRequest)
 
-        assertEquals(ResponseCode.SUCCESS, response.code)
+        assertEquals(RemotingSysResponseCode.SUCCESS, response!!.code)
         // nextBeginOffset应该是3
-        assertEquals(3L, response.extFields!!["nextBeginOffset"]?.toLong())
+        assertEquals(3L, response!!.extFields!!["nextBeginOffset"]?.toLong())
     }
 
     @Test
     fun `test pull message without required fields`() {
         val pullRequest = RemotingCommand.createRequestCommand(RequestCode.PULL_MESSAGE, null)
-        pullRequest.extFields = mapOf(
+        pullRequest.extFields = hashMapOf(
             "topic" to "TestTopic"
             // 缺少consumerGroup, queueId等
         )
 
         val response = pullMessageProcessor.processRequest(null, pullRequest)
 
-        assertEquals(ResponseCode.SYSTEM_ERROR, response.code)
+        assertEquals(RemotingSysResponseCode.SYSTEM_ERROR, response!!.code)
     }
 }

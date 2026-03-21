@@ -76,20 +76,26 @@ class ConsumeQueue(
                 mappedFile = mappedFileQueue.createMappedFile()
             }
 
-            // 2. 编码索引单元（20字节）
+            // 2. 检查mappedFile是否成功创建
+            if (mappedFile == null) {
+                log.error("Create mapped file failed for consume queue: topic=$topic, queueId=$queueId")
+                return@withContext
+            }
+
+            // 3. 编码索引单元（20字节）
             val buffer = ByteBuffer.allocate(CQ_STORE_UNIT_SIZE)
             buffer.putLong(phyOffset)
             buffer.putInt(size)
             buffer.putLong(tagsCode)
             buffer.flip()
 
-            // 3. 写入
+            // 4. 写入
             val result = mappedFile.appendMessage(buffer)
 
             if (result.status == AppendMessageStatus.PUT_OK) {
                 maxPhysicOffset = phyOffset
             } else {
-                log.error("Append ConsumeQueue failed: topic={}, queueId={}", topic, queueId)
+                log.error("Append ConsumeQueue failed: topic=$topic, queueId=$queueId")
             }
         }
     }
@@ -113,7 +119,7 @@ class ConsumeQueue(
             ?: return -1
 
         // 计算文件内具体位置
-        val position = (fileOffset - mappedFile.getFileFromOffset()).toInt()
+        val position = (fileOffset - mappedFile.fileFromOffset).toInt()
 
         // 检查边界
         if (position < 0 || position >= mappedFile.wrotePosition()) {
@@ -165,7 +171,7 @@ class ConsumeQueue(
      */
     fun getMaxOffsetInQueue(): Long {
         val lastFile = mappedFileQueue.getLastMappedFile() ?: return 0L
-        return lastFile.wrotePosition() / CQ_STORE_UNIT_SIZE
+        return (lastFile.wrotePosition() / CQ_STORE_UNIT_SIZE).toLong()
     }
 
     /**

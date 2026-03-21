@@ -230,7 +230,7 @@ class CommitLogActor(
             ?: return null
 
         // 2. 计算文件内偏移
-        val fileOffset = (phyOffset - mappedFile.getFileFromOffset()).toInt()
+        val fileOffset = (phyOffset - mappedFile.fileFromOffset).toInt()
 
         // 3. 读取消息总大小（前4字节）
         val sizeBuffer = mappedFile.getMessage(fileOffset, 4)
@@ -276,7 +276,7 @@ class CommitLogActor(
      */
     fun getFlushedOffset(): Long {
         val lastFile = mappedFileQueue.getLastMappedFile() ?: return 0L
-        return lastFile.getFileFromOffset() + lastFile.flushedPosition()
+        return lastFile.fileFromOffset + lastFile.flushedPosition()
     }
 
     /**

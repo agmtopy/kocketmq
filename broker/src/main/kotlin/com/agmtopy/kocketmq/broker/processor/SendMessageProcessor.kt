@@ -10,6 +10,7 @@ import com.agmtopy.kocketmq.remoting.RemotingCommand
 import com.agmtopy.kocketmq.remoting.annotation.CFNotNull
 import com.agmtopy.kocketmq.remoting.annotation.CFNullable
 import com.agmtopy.kocketmq.remoting.netty.NettyRequestProcessor
+import com.agmtopy.kocketmq.remoting.protocol.RemotingSysResponseCode
 import com.agmtopy.kocketmq.remoting.protocol.ResponseCode
 import io.netty.channel.ChannelHandlerContext
 import kotlinx.coroutines.runBlocking
@@ -30,7 +31,11 @@ class SendMessageProcessor(
         private val log: InternalLogger = InternalLoggerFactory.getLogger(SendMessageProcessor::class.java)
     }
 
-    override fun processRequest(ctx: ChannelHandlerContext, request: RemotingCommand): RemotingCommand {
+    override fun processRequest(ctx: ChannelHandlerContext?, request: RemotingCommand?): RemotingCommand? {
+        if (ctx == null || request == null) {
+            return RemotingCommand.createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "参数为空")
+        }
+
         val requestCode = request.code
 
         return when (requestCode) {
@@ -41,22 +46,24 @@ class SendMessageProcessor(
                 processBatchSendMessage(ctx, request)
             }
             else -> {
-                RemotingCommand.createResponseCommand(ResponseCode.REQUEST_CODE_NOT_SUPPORTED, "Unsupported request code: $requestCode")
+                RemotingCommand.createResponseCommand(RemotingSysResponseCode.REQUEST_CODE_NOT_SUPPORTED, "Unsupported request code: $requestCode")
             }
         }
     }
 
+    override fun rejectRequest(): Boolean = false
+
     /**
      * 处理发送消息请求
      */
-    private fun processSendMessage(ctx: ChannelHandlerContext, request: RemotingCommand): RemotingCommand {
+    private fun processSendMessage(ctx: ChannelHandlerContext, request: RemotingCommand): RemotingCommand? {
         return try {
             // 1. 解码请求头
             val requestHeader = decodeSendMessageRequestHeader(request)
 
             if (requestHeader == null) {
                 return RemotingCommand.createResponseCommand(
-                    ResponseCode.SYSTEM_ERROR,
+                    RemotingSysResponseCode.SYSTEM_ERROR,
                     "Decode request header failed"
                 )
             }
@@ -87,29 +94,29 @@ class SendMessageProcessor(
                     queueOffset = 0L  // TODO: 从ConsumeQueue获取
                 )
 
-                val response = RemotingCommand.createResponseCommand(ResponseCode.SUCCESS, "OK")
-                response.setExtFields(responseHeader.toMap())
+                val response = RemotingCommand.createResponseCommand(RemotingSysResponseCode.SUCCESS, "OK")
+                response?.setExtFields(responseHeader.toMap())
                 response
             } else {
                 RemotingCommand.createResponseCommand(
-                    ResponseCode.SYSTEM_ERROR,
+                    RemotingSysResponseCode.SYSTEM_ERROR,
                     "Put message failed: ${putResult.status}"
                 )
             }
 
         } catch (e: Exception) {
             log.error("Process send message failed", e)
-            RemotingCommand.createResponseCommand(ResponseCode.SYSTEM_ERROR, "Process failed: ${e.message}")
+            RemotingCommand.createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "Process failed: ${e.message}")
         }
     }
 
     /**
      * 处理批量发送消息请求
      */
-    private fun processBatchSendMessage(ctx: ChannelHandlerContext, request: RemotingCommand): RemotingCommand {
+    private fun processBatchSendMessage(ctx: ChannelHandlerContext, request: RemotingCommand): RemotingCommand? {
         // TODO: 实现批量发送
         return RemotingCommand.createResponseCommand(
-            ResponseCode.REQUEST_CODE_NOT_SUPPORTED,
+            RemotingSysResponseCode.REQUEST_CODE_NOT_SUPPORTED,
             "Batch send not implemented yet"
         )
     }
@@ -141,7 +148,7 @@ class SendMessageProcessor(
      * 构建消息对象
      */
     private fun buildMessageExt(header: SendMessageRequestHeader, request: RemotingCommand): MessageExt {
-        val body = request.body ?: ByteArray(0)
+        val body = request.getBody() ?: ByteArray(0)
 
         return MessageExt(
             topic = header.topic,

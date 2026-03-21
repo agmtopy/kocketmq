@@ -4,7 +4,7 @@ import com.agmtopy.kocketmq.broker.BrokerController
 import com.agmtopy.kocketmq.broker.config.BrokerConfig
 import com.agmtopy.kocketmq.common.constant.RequestCode
 import com.agmtopy.kocketmq.remoting.RemotingCommand
-import com.agmtopy.kocketmq.remoting.protocol.ResponseCode
+import com.agmtopy.kocketmq.remoting.protocol.RemotingSysResponseCode
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -58,18 +58,18 @@ class BatchSendMessageProcessorTest {
         ))
 
         val request = RemotingCommand.createRequestCommand(RequestCode.SEND_BATCH_MESSAGE, null)
-        request.extFields = mapOf(
+        request.extFields = hashMapOf(
             "topic" to "TestTopic",
             "queueId" to "0"
         )
-        request.body = batchBody
+        request.setBody(batchBody)
 
         val response = batchProcessor.processRequest(null, request)
 
-        assertEquals(ResponseCode.SUCCESS, response.code)
-        assertNotNull(response.extFields)
-        assertEquals("3", response.extFields!!["count"])
-        assertEquals("3", response.extFields!!["successCount"])
+        assertEquals(RemotingSysResponseCode.SUCCESS, response!!.code)
+        assertNotNull(response!!.extFields)
+        assertEquals("3", response!!.extFields!!["count"])
+        assertEquals("3", response!!.extFields!!["successCount"])
     }
 
     @Test
@@ -79,30 +79,30 @@ class BatchSendMessageProcessorTest {
         ))
 
         val request = RemotingCommand.createRequestCommand(RequestCode.SEND_BATCH_MESSAGE, null)
-        request.extFields = mapOf(
+        request.extFields = hashMapOf(
             "topic" to "AutoTopic",
             "queueId" to "0"
         )
-        request.body = batchBody
+        request.setBody(batchBody)
 
         val response = batchProcessor.processRequest(null, request)
 
-        assertEquals(ResponseCode.SUCCESS, response.code)
+        assertEquals(RemotingSysResponseCode.SUCCESS, response!!.code)
         assertNotNull(brokerController.topicConfigManager.getTopicConfig("AutoTopic"))
     }
 
     @Test
     fun `测试空批量消息`() {
         val request = RemotingCommand.createRequestCommand(RequestCode.SEND_BATCH_MESSAGE, null)
-        request.extFields = mapOf(
+        request.extFields = hashMapOf(
             "topic" to "TestTopic",
             "queueId" to "0"
         )
-        request.body = ByteArray(0)
+        request.setBody(ByteArray(0))
 
         val response = batchProcessor.processRequest(null, request)
 
-        assertEquals(ResponseCode.SYSTEM_ERROR, response.code)
+        assertEquals(RemotingSysResponseCode.SYSTEM_ERROR, response!!.code)
     }
 
     /**

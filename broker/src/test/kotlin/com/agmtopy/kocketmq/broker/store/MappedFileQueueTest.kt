@@ -49,7 +49,7 @@ class MappedFileQueueTest {
         val file = queue.createMappedFile(0L)
 
         assertNotNull(file)
-        assertEquals(0L, file!!.getFileFromOffset())
+        assertEquals(0L, file!!.fileFromOffset)
         assertEquals(1, queue.size())
         assertFalse(queue.isEmpty())
     }
@@ -67,7 +67,7 @@ class MappedFileQueueTest {
         val lastFile = queue.getLastMappedFile()
 
         assertNotNull(lastFile)
-        assertEquals(0L, lastFile!!.getFileFromOffset())
+        assertEquals(0L, lastFile!!.fileFromOffset)
     }
 
     @Test
@@ -83,17 +83,17 @@ class MappedFileQueueTest {
         // 查找偏移量512 -> 第一个文件
         val file1 = queue.findMappedFile(512)
         assertNotNull(file1)
-        assertEquals(0L, file1!!.getFileFromOffset())
+        assertEquals(0L, file1!!.fileFromOffset)
 
         // 查找偏移量1500 -> 第二个文件
         val file2 = queue.findMappedFile(1500)
         assertNotNull(file2)
-        assertEquals(1024L, file2!!.getFileFromOffset())
+        assertEquals(1024L, file2!!.fileFromOffset)
 
         // 查找偏移量2100 -> 第三个文件
         val file3 = queue.findMappedFile(2100)
         assertNotNull(file3)
-        assertEquals(2048L, file3!!.getFileFromOffset())
+        assertEquals(2048L, file3!!.fileFromOffset)
 
         // 查找超出范围的偏移量
         val file4 = queue.findMappedFile(10000)
@@ -107,13 +107,13 @@ class MappedFileQueueTest {
 
         // 写入数据填满第一个文件
         val file1 = queue.createMappedFile(0L)!!
-        val data1 = ByteBuffer.wrap("A".repeat(1000).toByteArray())
+        val data1 = ByteBuffer.wrap("A".repeat(1000).toByteArray()
         val result1 = file1.appendMessage(data1)
 
         assertEquals(AppendMessageStatus.PUT_OK, result1.status)
 
         // 再次写入，第一个文件已满，应该返回END_OF_FILE
-        val data2 = ByteBuffer.wrap("B".repeat(100).toByteArray())
+        val data2 = ByteBuffer.wrap("B".repeat(100).toByteArray()
         val result2 = file1.appendMessage(data2)
         assertEquals(AppendMessageStatus.END_OF_FILE, result2.status)
 
@@ -144,14 +144,14 @@ class MappedFileQueueTest {
 
         // 创建文件并写入数据
         val file1 = queue.createMappedFile(0L)!!
-        file1.appendMessage(ByteBuffer.wrap("Test".toByteArray()))
+        file1.appendMessage(ByteBuffer.wrap("Test".toByteArray()
 
         assertEquals(0L, queue.getMinOffset())
         assertEquals(4L, queue.getMaxOffset())
 
         // 创建第二个文件
         val file2 = queue.createMappedFile(1024L)!!
-        file2.appendMessage(ByteBuffer.wrap("Test2".toByteArray()))
+        file2.appendMessage(ByteBuffer.wrap("Test2".toByteArray()
 
         assertEquals(0L, queue.getMinOffset())
         assertEquals(1029L, queue.getMaxOffset())  // 1024 + 5
@@ -164,10 +164,10 @@ class MappedFileQueueTest {
 
         // 创建文件并写入数据
         val file1 = queue.createMappedFile(0L)!!
-        file1.appendMessage(ByteBuffer.wrap("Test1".toByteArray()))
+        file1.appendMessage(ByteBuffer.wrap("Test1".toByteArray()
 
         val file2 = queue.createMappedFile(1024L)!!
-        file2.appendMessage(ByteBuffer.wrap("Test2".toByteArray()))
+        file2.appendMessage(ByteBuffer.wrap("Test2".toByteArray()
 
         // 批量刷盘
         val success = queue.flush(0)
@@ -189,8 +189,8 @@ class MappedFileQueueTest {
         queue.createMappedFile(2048L)
 
         // 写入一些数据
-        queue.findMappedFile(0)?.appendMessage(ByteBuffer.wrap("Test".toByteArray()))
-        queue.findMappedFile(1024)?.appendMessage(ByteBuffer.wrap("Test2".toByteArray()))
+        queue.findMappedFile(0)?.appendMessage(ByteBuffer.wrap("Test".toByteArray()
+        queue.findMappedFile(1024)?.appendMessage(ByteBuffer.wrap("Test2".toByteArray()
 
         // 销毁队列
         queue.destroy()

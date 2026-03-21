@@ -71,8 +71,7 @@ object MessageCompressor {
 
             val ratio = (1 - compressed.size.toDouble() / data.size) * 100
 
-            log.debug("压缩成功: original={} bytes, compressed={} bytes, ratio={}%, time={}ms",
-                data.size, compressed.size, String.format("%.2f", ratio), elapsed)
+            log.debug("压缩成功: original=${data.size} bytes, compressed=${compressed.size} bytes, ratio=${String.format("%.2f", ratio)}%, time=${elapsed}ms")
 
             compressed
 
@@ -110,8 +109,7 @@ object MessageCompressor {
             val decompressed = outputStream.toByteArray()
             val elapsed = System.currentTimeMillis() - startTime
 
-            log.debug("解压成功: compressed={} bytes, decompressed={} bytes, time={}ms",
-                data.size, decompressed.size, elapsed)
+            log.debug("解压成功: compressed=${data.size} bytes, decompressed=${decompressed.size} bytes, time=${elapsed}ms")
 
             decompressed
 

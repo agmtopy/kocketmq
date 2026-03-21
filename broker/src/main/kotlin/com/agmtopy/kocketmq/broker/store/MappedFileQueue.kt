@@ -136,7 +136,7 @@ class MappedFileQueue(
         }
 
         // 计算文件索引
-        val firstFileOffset = mappedFiles[0].getFileFromOffset()
+        val firstFileOffset = mappedFiles[0].fileFromOffset
         if (offset < firstFileOffset) {
             return null
         }
@@ -151,8 +151,8 @@ class MappedFileQueue(
         val mappedFile = mappedFiles[fileIndex]
 
         // 验证偏移量确实在该文件内
-        if (offset >= mappedFile.getFileFromOffset() &&
-            offset < mappedFile.getFileFromOffset() + mappedFileSize) {
+        if (offset >= mappedFile.fileFromOffset &&
+            offset < mappedFile.fileFromOffset + mappedFileSize) {
             return mappedFile
         }
 
@@ -193,7 +193,7 @@ class MappedFileQueue(
      * 获取最小偏移量
      */
     fun getMinOffset(): Long {
-        return mappedFiles.firstOrNull()?.getFileFromOffset() ?: 0L
+        return mappedFiles.firstOrNull()?.fileFromOffset ?: 0L
     }
 
     /**
@@ -201,7 +201,7 @@ class MappedFileQueue(
      */
     fun getMaxOffset(): Long {
         val lastFile = getLastMappedFile() ?: return 0L
-        return lastFile.getFileFromOffset() + lastFile.wrotePosition()
+        return lastFile.fileFromOffset + lastFile.wrotePosition()
     }
 
     /**
@@ -249,7 +249,7 @@ class MappedFileQueue(
     private fun calculateNextOffset(): Long {
         val lastFile = getLastMappedFile()
         return if (lastFile != null) {
-            lastFile.getFileFromOffset() + mappedFileSize
+            lastFile.fileFromOffset + mappedFileSize
         } else {
             0L
         }

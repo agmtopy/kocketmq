@@ -107,11 +107,12 @@ class TopicConfigManager(
      * 创建或更新Topic配置
      */
     fun updateTopicConfig(topicConfig: TopicConfig) {
+        val topicName = topicConfig.topicName ?: throw IllegalArgumentException("topicName cannot be null")
         lock.write {
-            topicConfigTable[topicConfig.topicName] = topicConfig
+            topicConfigTable[topicName] = topicConfig
             dataVersion.nextVersion()
 
-            log.info("Updated topic config: ${topicConfig.topicName}")
+            log.info("Updated topic config: $topicName")
         }
     }
 

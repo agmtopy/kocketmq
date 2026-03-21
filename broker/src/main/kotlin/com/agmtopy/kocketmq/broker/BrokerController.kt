@@ -228,4 +228,9 @@ class BrokerController(
      * 获取监听端口
      */
     fun getListenPort(): Int = remotingServer.localListenPort()
+
+    /**
+     * 获取Broker配置
+     */
+    fun getBrokerConfig(): BrokerConfig = brokerConfig
 }

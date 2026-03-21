@@ -38,7 +38,7 @@ object StoreOptimizer {
                 val fileSize = mappedFile.fileSize
                 val warmupBytes = if (warmupSize == -1) fileSize else minOf(warmupSize, fileSize)
 
-                log.info("开始预热文件: {}, size={} bytes", mappedFile.fileName, warmupBytes)
+                log.info("开始预热文件: ${mappedFile.fileName}, size=${warmupBytes} bytes")
 
                 // 读取每个块的首字节，触发OS预读
                 val buffer = ByteBuffer.allocate(1)
@@ -54,8 +54,7 @@ object StoreOptimizer {
 
                 val elapsed = System.currentTimeMillis() - startTime
 
-                log.info("文件预热完成: {}, touched={} blocks, time={}ms",
-                    mappedFile.fileName, touched, elapsed)
+                log.info("文件预热完成: ${mappedFile.fileName}, touched=$touched blocks, time=${elapsed}ms")
 
             } catch (e: Exception) {
                 log.error("文件预热失败: ${mappedFile.fileName}", e)
@@ -92,7 +91,7 @@ object StoreOptimizer {
             val elapsed = System.currentTimeMillis() - startTime
 
             if (elapsed > 10) {
-                log.debug("零拷贝传输: size={} bytes, time={}ms", size, elapsed)
+                log.debug("零拷贝传输: size=$size bytes, time=${elapsed}ms")
             }
 
             size.toLong()

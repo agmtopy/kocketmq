@@ -71,7 +71,7 @@ class CommitLogActorTest {
             topic = "TestTopic",
             queueId = 0,
             body = "Hello, CommitLog!".toByteArray(),
-            bodyCRC = MessageExt.calculateCRC32("Hello, CommitLog!".toByteArray())
+            bodyCRC = MessageExt.calculateCRC32("Hello, CommitLog!".toByteArray()
         )
 
         // 追加消息
@@ -103,7 +103,7 @@ class CommitLogActorTest {
                 topic = "Topic$i",
                 queueId = i % 3,
                 body = "Message $i".toByteArray(),
-                bodyCRC = MessageExt.calculateCRC32("Message $i".toByteArray())
+                bodyCRC = MessageExt.calculateCRC32("Message $i".toByteArray()
             )
 
             val result = commitLog.appendMessage(message)

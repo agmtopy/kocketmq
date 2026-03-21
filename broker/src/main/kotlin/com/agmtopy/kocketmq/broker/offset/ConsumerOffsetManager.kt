@@ -127,8 +127,7 @@ class ConsumerOffsetManager(
             queueOffsetMap[queueId] = offset
             dataVersion.nextVersion()
 
-            log.debug("Commit offset: topic={}, group={}, queueId={}, offset={}",
-                topic, group, queueId, offset)
+            log.debug("Commit offset: topic=$topic, group=$group, queueId=$queueId, offset=$offset")
         }
     }
 
@@ -181,8 +180,7 @@ class ConsumerOffsetManager(
             }
             dataVersion.nextVersion()
 
-            log.info("Removed offset: topic={}, group={}, queueId={}",
-                topic, group, queueId ?: "all")
+            log.info("Removed offset: topic=$topic, group=$group, queueId=${queueId ?: "all"}")
         }
     }
 

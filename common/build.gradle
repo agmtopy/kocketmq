@@ -6,7 +6,22 @@ plugins {
 group 'com.agmtopy'
 version '0.0.1-SNAPSHOT'
 
-sourceCompatibility = 11
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = '21'
+    }
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = '21'
+    }
+}
 
 dependencies {
     implementation project(":logging")
