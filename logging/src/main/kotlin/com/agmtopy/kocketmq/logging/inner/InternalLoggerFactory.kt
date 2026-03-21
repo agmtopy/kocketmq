@@ -20,10 +20,15 @@ abstract class InternalLoggerFactory {
 
         var loggerFactoryCache:ConcurrentHashMap<String, InternalLoggerFactory> = ConcurrentHashMap<String, InternalLoggerFactory>()
 
+        init {
+            // 自动注册ConsoleLogger作为默认实现
+            ConsoleLoggerFactory.register()
+        }
+
         /**
          * 根据ClassType获取InternalLogger
          */
-        fun getLogger(clazz: Class<*>): InternalLogger? {
+        fun getLogger(clazz: Class<*>): InternalLogger {
             return getLogger(clazz.name)
         }
 

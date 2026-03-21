@@ -1,0 +1,75 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+group 'com.agmtopy.kocketmq'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':common')
+    implementation project(':remoting')
+    implementation project(':logging')
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2"
+    implementation "io.netty:netty-all:4.1.100.Final"
+    implementation "com.alibaba:fastjson:1.2.69"
+
+    testImplementation "org.junit.jupiter:junit-jupiter:5.5.2"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.2"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.5.2"
+}
+
+// ==================== 编译优化 ====================
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "21"
+        incremental = true
+        allWarningsAsErrors = false
+    }
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "21"
+        incremental = true
+    }
+}
+
+// ==================== 测试优化 ====================
+
+test {
+    useJUnitPlatform()
+
+    // 注意：禁用并行测试，因为多个测试需要绑定同一端口
+    // 这些测试使用了固定的端口号（如10911），并行会导致端口冲突
+    maxParallelForks = 1
+
+    // 失败不停止，继续执行
+    failFast = false
+
+    // 测试JVM优化
+    jvmArgs = [
+        '-Xmx2g',
+        '-XX:+HeapDumpOnOutOfMemoryError',
+        '-Dfile.encoding=UTF-8'
+    ]
+
+    // 测试日志
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "short"
+    }
+}
+
+// ==================== Java编译优化 ====================
+
+tasks.withType(JavaCompile).configureEach {
+    options.fork = true
+    options.incremental = true
+    options.encoding = 'UTF-8'
+}
