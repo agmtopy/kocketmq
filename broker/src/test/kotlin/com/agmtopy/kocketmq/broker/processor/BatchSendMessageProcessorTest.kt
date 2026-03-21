@@ -43,7 +43,7 @@ class BatchSendMessageProcessorTest {
     }
 
     @AfterEach
-    fun tearDown() = runBlocking {
+    fun tearDown(): Unit = runBlocking {
         brokerController.shutdown()
         File(testDir).deleteRecursively()
     }
@@ -54,7 +54,7 @@ class BatchSendMessageProcessorTest {
         val batchBody = encodeBatchMessages(listOf(
             "Message 1".toByteArray(),
             "Message 2".toByteArray(),
-            "Message 3".toByteArray()
+            "\\1".toByteArray()
         ))
 
         val request = RemotingCommand.createRequestCommand(RequestCode.SEND_BATCH_MESSAGE, null)

@@ -107,13 +107,13 @@ class MappedFileQueueTest {
 
         // 写入数据填满第一个文件
         val file1 = queue.createMappedFile(0L)!!
-        val data1 = ByteBuffer.wrap("A".repeat(1000).toByteArray()
+        val data1 = ByteBuffer.wrap("A".repeat(1000).toByteArray())
         val result1 = file1.appendMessage(data1)
 
         assertEquals(AppendMessageStatus.PUT_OK, result1.status)
 
         // 再次写入，第一个文件已满，应该返回END_OF_FILE
-        val data2 = ByteBuffer.wrap("B".repeat(100).toByteArray()
+        val data2 = ByteBuffer.wrap("B".repeat(100).toByteArray())
         val result2 = file1.appendMessage(data2)
         assertEquals(AppendMessageStatus.END_OF_FILE, result2.status)
 
@@ -125,12 +125,16 @@ class MappedFileQueueTest {
         // 读取第一个文件
         val read1 = file1.getMessage(0, 100)
         assertNotNull(read1)
-        assertEquals("A".repeat(100), String(read1!!.array(), 0, 100))
+        val bytes1 = ByteArray(100)
+        read1!!.get(bytes1)
+        assertEquals("A".repeat(100), String(bytes1))
 
         // 读取第二个文件
         val read2 = file2.getMessage(0, 100)
         assertNotNull(read2)
-        assertEquals("B".repeat(100), String(read2!!.array(), 0, 100))
+        val bytes2 = ByteArray(100)
+        read2!!.get(bytes2)
+        assertEquals("B".repeat(100), String(bytes2))
     }
 
     @Test
@@ -144,14 +148,14 @@ class MappedFileQueueTest {
 
         // 创建文件并写入数据
         val file1 = queue.createMappedFile(0L)!!
-        file1.appendMessage(ByteBuffer.wrap("Test".toByteArray()
+        file1.appendMessage(ByteBuffer.wrap("Test".toByteArray()))
 
         assertEquals(0L, queue.getMinOffset())
         assertEquals(4L, queue.getMaxOffset())
 
         // 创建第二个文件
         val file2 = queue.createMappedFile(1024L)!!
-        file2.appendMessage(ByteBuffer.wrap("Test2".toByteArray()
+        file2.appendMessage(ByteBuffer.wrap("Test2".toByteArray()))
 
         assertEquals(0L, queue.getMinOffset())
         assertEquals(1029L, queue.getMaxOffset())  // 1024 + 5
@@ -164,10 +168,10 @@ class MappedFileQueueTest {
 
         // 创建文件并写入数据
         val file1 = queue.createMappedFile(0L)!!
-        file1.appendMessage(ByteBuffer.wrap("Test1".toByteArray()
+        file1.appendMessage(ByteBuffer.wrap("Test1".toByteArray()))
 
         val file2 = queue.createMappedFile(1024L)!!
-        file2.appendMessage(ByteBuffer.wrap("Test2".toByteArray()
+        file2.appendMessage(ByteBuffer.wrap("Test2".toByteArray()))
 
         // 批量刷盘
         val success = queue.flush(0)
@@ -189,8 +193,8 @@ class MappedFileQueueTest {
         queue.createMappedFile(2048L)
 
         // 写入一些数据
-        queue.findMappedFile(0)?.appendMessage(ByteBuffer.wrap("Test".toByteArray()
-        queue.findMappedFile(1024)?.appendMessage(ByteBuffer.wrap("Test2".toByteArray()
+        queue.findMappedFile(0)?.appendMessage(ByteBuffer.wrap("Test".toByteArray()))
+        queue.findMappedFile(1024)?.appendMessage(ByteBuffer.wrap("Test2".toByteArray()))
 
         // 销毁队列
         queue.destroy()

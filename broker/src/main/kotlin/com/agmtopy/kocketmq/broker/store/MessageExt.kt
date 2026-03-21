@@ -29,7 +29,7 @@ data class MessageExt(
         const val MESSAGE_MAGIC_CODE = 0xAABBCCDD.toInt()
 
         // 消息头固定大小
-        const val MESSAGE_HEADER_SIZE = 40  // 不包括totalSize字段
+        const val MESSAGE_HEADER_SIZE = 32  // 不包括totalSize字段
 
         // CRC32计算
         fun calculateCRC32(data: ByteArray): Int {
@@ -81,19 +81,21 @@ object MessageCodec {
      *
      * 消息格式：
      * [totalSize(4)][magicCode(4)][bodyCRC(4)][queueId(4)][flag(4)][sysFlag(4)][queueOffset(8)]
-     * [bodySize(4)][body(N)][propertiesSize(2)][properties(N)]
+     * [topicSize(2)][topic(N)][bodySize(4)][body(N)][propertiesSize(2)][properties(N)]
      *
      * @param message 消息对象
      * @return 编码后的ByteBuffer
      */
     fun encode(message: MessageExt): ByteBuffer {
         // 计算各部分大小
+        val topicBytes = message.topic.toByteArray(Charsets.UTF_8)
+        val topicSize = topicBytes.size
         val bodySize = message.body.size
         val propertiesBytes = message.properties?.toByteArray(Charsets.UTF_8) ?: ByteArray(0)
         val propertiesSize = propertiesBytes.size
 
         // 计算总大小（不包括totalSize字段本身）
-        val totalSize = MessageExt.MESSAGE_HEADER_SIZE + bodySize + 2 + propertiesSize
+        val totalSize = MessageExt.MESSAGE_HEADER_SIZE + 2 + topicSize + bodySize + 2 + propertiesSize
 
         // 分配缓冲区（+4 for totalSize field）
         val buffer = ByteBuffer.allocate(totalSize + 4)
@@ -106,6 +108,12 @@ object MessageCodec {
         buffer.putInt(message.flag)
         buffer.putInt(message.sysFlag)
         buffer.putLong(message.queueOffset)
+
+        // 写入主题
+        buffer.putShort(topicSize.toShort())
+        if (topicSize > 0) {
+            buffer.put(topicBytes)
+        }
 
         // 写入消息体
         buffer.putInt(bodySize)
@@ -150,6 +158,17 @@ object MessageCodec {
             message.sysFlag = buffer.int
             message.queueOffset = buffer.long
 
+            // 读取主题
+            val topicSize = buffer.short.toInt()
+            if (topicSize > 0) {
+                if (topicSize > buffer.remaining()) {
+                    return null  // 数据不完整
+                }
+                val topicBytes = ByteArray(topicSize)
+                buffer.get(topicBytes)
+                message.topic = String(topicBytes, Charsets.UTF_8)
+            }
+
             // 读取消息体
             val bodySize = buffer.int
             if (bodySize > 0) {
@@ -190,8 +209,9 @@ object MessageCodec {
      * 计算消息总大小
      */
     fun calTotalSize(message: MessageExt): Int {
+        val topicSize = message.topic.toByteArray(Charsets.UTF_8).size
         val bodySize = message.body.size
         val propertiesSize = message.properties?.toByteArray(Charsets.UTF_8)?.size ?: 0
-        return MessageExt.MESSAGE_HEADER_SIZE + bodySize + 2 + propertiesSize
+        return MessageExt.MESSAGE_HEADER_SIZE + 2 + topicSize + bodySize + 2 + propertiesSize
     }
 }

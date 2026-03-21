@@ -27,7 +27,7 @@ class MessageStoreActorTest {
     }
 
     @AfterEach
-    fun tearDown() = runBlocking {
+    fun tearDown(): Unit = runBlocking {
         // 清理资源
         messageStore.shutdown()
         File(testDir).deleteRecursively()
@@ -59,7 +59,7 @@ class MessageStoreActorTest {
             topic = "TestTopic",
             queueId = 0,
             body = "Hello, MessageStore!".toByteArray(),
-            bodyCRC = MessageExt.calculateCRC32("Hello, MessageStore!".toByteArray()
+            bodyCRC = MessageExt.calculateCRC32("Hello, MessageStore!".toByteArray())
         )
 
         // 存储消息
@@ -93,7 +93,7 @@ class MessageStoreActorTest {
                 topic = "TestTopic",
                 queueId = 0,
                 body = "Message $i".toByteArray(),
-                bodyCRC = MessageExt.calculateCRC32("Message $i".toByteArray()
+                bodyCRC = MessageExt.calculateCRC32("Message $i".toByteArray())
             )
 
             val putResult = messageStore.putMessage(message)

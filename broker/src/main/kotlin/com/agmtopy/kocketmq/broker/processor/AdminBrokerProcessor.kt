@@ -31,8 +31,8 @@ class AdminBrokerProcessor(
     }
 
     override fun processRequest(ctx: ChannelHandlerContext?, request: RemotingCommand?): RemotingCommand? {
-        if (ctx == null || request == null) {
-            return RemotingCommand.createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "参数为空")
+        if (request == null) {
+            return RemotingCommand.createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "Request is null")
         }
         // 使用非空参数调用实际处理方法
         return processRequestInternal(ctx, request)
@@ -40,7 +40,7 @@ class AdminBrokerProcessor(
 
     override fun rejectRequest(): Boolean = false
 
-    private fun processRequestInternal(ctx: ChannelHandlerContext, request: RemotingCommand): RemotingCommand? {
+    private fun processRequestInternal(ctx: ChannelHandlerContext?, request: RemotingCommand): RemotingCommand? {
         return when (request.code) {
             RequestCode.UPDATE_AND_CREATE_TOPIC -> updateAndCreateTopic(request)
             RequestCode.GET_ALL_TOPIC_CONFIG -> getAllTopicConfig(request)

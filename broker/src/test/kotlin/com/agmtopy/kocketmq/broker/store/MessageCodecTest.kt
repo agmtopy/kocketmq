@@ -15,7 +15,7 @@ class MessageCodecTest {
             topic = "TestTopic",
             queueId = 0,
             body = "Hello, KocketMQ!".toByteArray(),
-            bodyCRC = MessageExt.calculateCRC32("Hello, KocketMQ!".toByteArray()
+            bodyCRC = MessageExt.calculateCRC32("Hello, KocketMQ!".toByteArray())
         )
 
         // 编码
@@ -44,7 +44,7 @@ class MessageCodecTest {
             flag = 1,
             sysFlag = 2,
             queueOffset = 100L,
-            bodyCRC = MessageExt.calculateCRC32("Message with properties".toByteArray()
+            bodyCRC = MessageExt.calculateCRC32("Message with properties".toByteArray())
         )
 
         // 编码

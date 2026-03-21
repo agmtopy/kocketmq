@@ -202,9 +202,23 @@ class CommitLogActor(
         val messageBuffer = MessageCodec.encode(message)
 
         // 3. 写入文件
-        val result = mappedFile.appendMessage(messageBuffer)
+        var result = mappedFile.appendMessage(messageBuffer)
 
-        // 4. 更新maxOffset
+        // 4. 如果文件已满，创建新文件并重试
+        if (result.status == AppendMessageStatus.END_OF_FILE) {
+            log.info("File full, creating new file")
+            mappedFile = mappedFileQueue.createMappedFile(_maxOffset.value)
+            if (mappedFile == null) {
+                log.error("Create mapped file failed after END_OF_FILE")
+                return AppendMessageResult(
+                    AppendMessageStatus.CREATE_MAPEDFILE_FAILED,
+                    -1
+                )
+            }
+            result = mappedFile.appendMessage(messageBuffer)
+        }
+
+        // 5. 更新maxOffset
         if (result.status == AppendMessageStatus.PUT_OK) {
             _maxOffset.value = result.wroteOffset + result.wroteBytes
         }

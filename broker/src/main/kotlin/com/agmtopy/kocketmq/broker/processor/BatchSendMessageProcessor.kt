@@ -30,8 +30,8 @@ class BatchSendMessageProcessor(
     }
 
     override fun processRequest(ctx: ChannelHandlerContext?, request: RemotingCommand?): RemotingCommand? {
-        if (ctx == null || request == null) {
-            return RemotingCommand.createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "参数为空")
+        if (request == null) {
+            return RemotingCommand.createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "Request is null")
         }
         return when (request.code) {
             RequestCode.SEND_BATCH_MESSAGE -> processBatchSendMessage(request)

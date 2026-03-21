@@ -36,7 +36,9 @@ class MappedFile(
 
     val file: File = File(fileName)
     val fileFromOffset: Long = try {
-        file.name.toLongOrNull() ?: 0L
+        // 从文件名解析偏移量：去掉扩展名后解析数字
+        val nameWithoutExtension = file.name.substringBeforeLast(".")
+        nameWithoutExtension.toLongOrNull() ?: 0L
     } catch (e: Exception) {
         0L
     }
@@ -67,6 +69,10 @@ class MappedFile(
 
             // 创建RandomAccessFile
             randomAccessFile = RandomAccessFile(file, "rw")
+
+            // 检查文件是否已存在
+            val fileExists = file.exists() && file.length() > 0
+
             randomAccessFile!!.setLength(fileSize.toLong())
 
             // 获取FileChannel并映射到内存
@@ -77,10 +83,55 @@ class MappedFile(
                 fileSize.toLong()
             )
 
-            log.info("MappedFile created: {}, size={}", fileName, fileSize)
+            // 如果文件已存在，恢复wrotePosition
+            if (fileExists) {
+                recoverWrotePosition()
+            }
+
+            log.info("MappedFile created: $fileName, size=$fileSize, wrotePosition=${wrotePosition.get()}")
         } catch (e: Exception) {
             log.error("Failed to create MappedFile: {}", fileName, e)
             throw e
+        }
+    }
+
+    /**
+     * 恢复写入位置（从已存在的文件）
+     */
+    private fun recoverWrotePosition() {
+        try {
+            // 扫描文件，找到最后一个有效消息的结束位置
+            var position = 0
+            val buffer = mappedByteBuffer ?: return
+
+            while (position < fileSize - 4) {
+                // 读取消息总大小（前4字节）
+                buffer.position(position)
+                val totalSize = buffer.int
+
+                // 检查是否有效
+                if (totalSize <= 0 || totalSize > fileSize - position) {
+                    break
+                }
+
+                // 检查魔数
+                val magicCode = buffer.int
+                if (magicCode != MESSAGE_MAGIC_CODE) {
+                    break
+                }
+
+                // 移动到下一条消息
+                position += totalSize + 4  // totalSize不包括自己的4字节
+            }
+
+            wrotePosition.set(position)
+            flushedPosition.set(position)
+            committedPosition.set(position)
+
+            log.debug("Recovered wrotePosition: {}", position)
+        } catch (e: Exception) {
+            log.error("Recover wrotePosition failed", e)
+            wrotePosition.set(0)
         }
     }
 
@@ -142,10 +193,11 @@ class MappedFile(
         }
 
         mappedByteBuffer?.let { buffer ->
-            val slice = buffer.slice()
-            slice.position(offset)
-            slice.limit(offset + size)
-            return slice
+            // 使用duplicate()创建独立视图，避免影响原buffer的position
+            val duplicate = buffer.duplicate()
+            duplicate.position(offset)
+            duplicate.limit(offset + size)
+            return duplicate
         }
 
         return null

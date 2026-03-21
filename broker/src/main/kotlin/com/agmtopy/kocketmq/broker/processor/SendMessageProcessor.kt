@@ -32,8 +32,8 @@ class SendMessageProcessor(
     }
 
     override fun processRequest(ctx: ChannelHandlerContext?, request: RemotingCommand?): RemotingCommand? {
-        if (ctx == null || request == null) {
-            return RemotingCommand.createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "参数为空")
+        if (request == null) {
+            return RemotingCommand.createResponseCommand(RemotingSysResponseCode.SYSTEM_ERROR, "Request is null")
         }
 
         val requestCode = request.code
@@ -56,7 +56,7 @@ class SendMessageProcessor(
     /**
      * 处理发送消息请求
      */
-    private fun processSendMessage(ctx: ChannelHandlerContext, request: RemotingCommand): RemotingCommand? {
+    private fun processSendMessage(ctx: ChannelHandlerContext?, request: RemotingCommand): RemotingCommand? {
         return try {
             // 1. 解码请求头
             val requestHeader = decodeSendMessageRequestHeader(request)
@@ -113,7 +113,7 @@ class SendMessageProcessor(
     /**
      * 处理批量发送消息请求
      */
-    private fun processBatchSendMessage(ctx: ChannelHandlerContext, request: RemotingCommand): RemotingCommand? {
+    private fun processBatchSendMessage(ctx: ChannelHandlerContext?, request: RemotingCommand): RemotingCommand? {
         // TODO: 实现批量发送
         return RemotingCommand.createResponseCommand(
             RemotingSysResponseCode.REQUEST_CODE_NOT_SUPPORTED,

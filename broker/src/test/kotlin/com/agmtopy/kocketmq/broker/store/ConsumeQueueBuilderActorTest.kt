@@ -22,7 +22,7 @@ class ConsumeQueueBuilderActorTest {
     }
 
     @AfterEach
-    fun tearDown() = runBlocking {
+    fun tearDown(): Unit = runBlocking {
         builder.shutdown()
         File(testDir).deleteRecursively()
     }

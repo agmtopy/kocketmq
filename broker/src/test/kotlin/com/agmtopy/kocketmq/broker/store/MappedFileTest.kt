@@ -47,7 +47,7 @@ class MappedFileTest {
         mappedFile = MappedFile(fileName, 1024)
 
         // 写入消息
-        val data = ByteBuffer.wrap("Hello, KocketMQ!".toByteArray()
+        val data = ByteBuffer.wrap("Hello, KocketMQ!".toByteArray())
         val result = mappedFile.appendMessage(data)
 
         assertEquals(AppendMessageStatus.PUT_OK, result.status)
@@ -69,14 +69,17 @@ class MappedFileTest {
         mappedFile = MappedFile(fileName, 1024)
 
         // 写入多条消息
+        var totalSize = 0
         for (i in 1..10) {
-            val data = ByteBuffer.wrap("Message $i".toByteArray()
+            val msg = "Message $i"
+            val data = ByteBuffer.wrap(msg.toByteArray())
             val result = mappedFile.appendMessage(data)
+            totalSize += msg.toByteArray().size
 
             assertEquals(AppendMessageStatus.PUT_OK, result.status)
         }
 
-        assertEquals(10 * "Message 1".toByteArray().size, mappedFile.wrotePosition())
+        assertEquals(totalSize, mappedFile.wrotePosition())
     }
 
     @Test
@@ -86,14 +89,22 @@ class MappedFileTest {
         mappedFile = MappedFile(fileName, fileSize)
 
         // 写入数据直到文件满
-        val data = ByteBuffer.wrap("A".repeat(80).toByteArray()
-        val result1 = mappedFile.appendMessage(data)
+        val data1 = ByteBuffer.wrap("A".repeat(80).toByteArray())
+        val result1 = mappedFile.appendMessage(data1)
         assertEquals(AppendMessageStatus.PUT_OK, result1.status)
         assertFalse(mappedFile.isFull())
 
-        // 再次写入，应该返回END_OF_FILE
-        val result2 = mappedFile.appendMessage(data)
+        // 尝试再次写入80字节，应该返回END_OF_FILE（空间不足）
+        val data2 = ByteBuffer.wrap("A".repeat(80).toByteArray())
+        val result2 = mappedFile.appendMessage(data2)
         assertEquals(AppendMessageStatus.END_OF_FILE, result2.status)
+        // 但文件还未满，因为只写入了80字节
+        assertFalse(mappedFile.isFull())
+
+        // 写入剩余的20字节，文件才满
+        val data3 = ByteBuffer.wrap("A".repeat(20).toByteArray())
+        val result3 = mappedFile.appendMessage(data3)
+        assertEquals(AppendMessageStatus.PUT_OK, result3.status)
         assertTrue(mappedFile.isFull())
     }
 
@@ -103,7 +114,7 @@ class MappedFileTest {
         mappedFile = MappedFile(fileName, 1024)
 
         // 写入数据
-        val data = ByteBuffer.wrap("Test flush".toByteArray()
+        val data = ByteBuffer.wrap("Test flush".toByteArray())
         mappedFile.appendMessage(data)
 
         // 刷盘

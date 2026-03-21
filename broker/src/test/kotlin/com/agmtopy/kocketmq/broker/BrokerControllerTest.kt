@@ -33,7 +33,7 @@ class BrokerControllerTest {
     }
 
     @AfterEach
-    fun tearDown() = runBlocking {
+    fun tearDown(): Unit = runBlocking {
         brokerController.shutdown()
         File(testDir).deleteRecursively()
     }
