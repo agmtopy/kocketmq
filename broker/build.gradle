@@ -15,7 +15,7 @@ dependencies {
     implementation project(':logging')
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2"
-    implementation "io.netty:netty-all:4.0.42.Final"
+    implementation "io.netty:netty-all:4.1.100.Final"
     implementation "com.alibaba:fastjson:1.2.69"
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.5.2"
@@ -23,14 +23,52 @@ dependencies {
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.5.2"
 }
 
-test {
-    useJUnitPlatform()
-}
+// ==================== 编译优化 ====================
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "21"
+    kotlinOptions {
+        jvmTarget = "21"
+        incremental = true
+        allWarningsAsErrors = false
+    }
 }
 
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "21"
+    kotlinOptions {
+        jvmTarget = "21"
+        incremental = true
+    }
+}
+
+// ==================== 测试优化 ====================
+
+test {
+    useJUnitPlatform()
+
+    // 并行测试执行
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+
+    // 失败不停止，继续执行
+    failFast = false
+
+    // 测试JVM优化
+    jvmArgs = [
+        '-Xmx2g',
+        '-XX:+HeapDumpOnOutOfMemoryError',
+        '-Dfile.encoding=UTF-8'
+    ]
+
+    // 测试日志
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "short"
+    }
+}
+
+// ==================== Java编译优化 ====================
+
+tasks.withType(JavaCompile).configureEach {
+    options.fork = true
+    options.incremental = true
+    options.encoding = 'UTF-8'
 }

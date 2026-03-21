@@ -24,21 +24,43 @@ java {
     targetCompatibility = JavaVersion.VERSION_21
 }
 
+// ==================== Kotlin编译优化 ====================
+
 compileKotlin {
     kotlinOptions {
         jvmTarget = '21'
+        // 启用增量编译
+        incremental = true
+        // 优化选项
+        allWarningsAsErrors = false
     }
 }
 
 compileTestKotlin {
     kotlinOptions {
         jvmTarget = '21'
+        incremental = true
     }
 }
 
-allprojects{
+// ==================== 全局配置 ====================
+
+allprojects {
     repositories {
         mavenCentral()
+    }
+
+    // 应用构建缓存
+    tasks.withType(JavaCompile).configureEach {
+        options.fork = true
+        options.incremental = true
+    }
+
+    // Kotlin编译任务优化
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            jvmTarget = '21'
+        }
     }
 }
 
@@ -50,6 +72,54 @@ dependencies {
     testImplementation('org.junit.jupiter:junit-jupiter:5.5.2')
 }
 
+// ==================== 测试优化 ====================
+
 test {
     useJUnitPlatform()
+
+    // 并行执行测试
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+
+    // 测试失败时继续执行其他测试
+    failFast = false
+
+    // 测试输出
+    testLogging {
+        events "passed", "skipped", "failed"
+        showExceptions true
+        showCauses true
+        showStackTraces false
+        exceptionFormat "full"
+    }
+
+    // JVM参数优化
+    jvmArgs = [
+        '-Xmx2g',
+        '-XX:+HeapDumpOnOutOfMemoryError',
+        '-Dfile.encoding=UTF-8'
+    ]
+}
+
+// ==================== 构建性能分析 ====================
+
+// 添加性能分析任务
+task buildScanInfo {
+    doLast {
+        println "\n=== 构建性能信息 ==="
+        println "Gradle版本: ${gradle.gradleVersion}"
+        println "Java版本: ${System.getProperty('java.version')}"
+        println "JVM最大内存: ${Runtime.runtime.maxMemory() / 1024 / 1024}MB"
+        println "可用处理器: ${Runtime.runtime.availableProcessors()}"
+        println "并行构建: ${gradle.startParameter.parallelProjectExecutionEnabled}"
+        println "构建缓存: ${gradle.startParameter.buildCacheEnabled}"
+        println "Daemon: ${gradle.startParameter.systemPropertiesArgs['org.gradle.daemon'] ?: 'true'}"
+        println "==================\n"
+    }
+}
+
+// 在构建前显示性能信息
+gradle.taskGraph.whenReady { graph ->
+    if (graph.hasTask(':buildScanInfo')) {
+        // 只有明确调用时才显示
+    }
 }
